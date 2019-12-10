@@ -1,6 +1,15 @@
 
 const routes = [
   {
+    path: '/print',
+    component: () => import('layouts/Print.vue'),
+    children: [
+      { path: 'invoice', component: () => import('pages/print/Invoice.vue') },
+      { path: 'bill', component: () => import('pages/print/Bill.vue') },
+      { path: 'note', component: () => import('pages/print/Note.vue') }
+    ]
+  },
+  {
     path: '/',
     component: () => import('layouts/MyLayout.vue'),
     children: [
