@@ -14,6 +14,8 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "axios": "^0.18.1",
+    "number2words": "https://github.com/gpincheiraa/number2words",
+    "qrcode.vue": "^1.7.0",
     "quasar": "^1.0.0"
   },
   "devDependencies": {

@@ -4,6 +4,7 @@ const routes = [
     path: '/print',
     component: () => import('layouts/Print.vue'),
     children: [
+      { path: '', component: () => import('pages/print/Index.vue') },
       { path: 'invoice', component: () => import('pages/print/Invoice.vue') },
       { path: 'bill', component: () => import('pages/print/Bill.vue') },
       { path: 'note', component: () => import('pages/print/Note.vue') }

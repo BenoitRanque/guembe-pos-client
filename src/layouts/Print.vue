@@ -1,49 +1,21 @@
 <template>
   <div>
-    <q-toolbar class="print-hide">
-      <q-toolbar-title>Cola de impresion</q-toolbar-title>
-      <q-btn icon="mdi-print"></q-btn>
+    <q-toolbar class="print-hide bg-primary text-white shadow-6">
+      <q-toolbar-title>Cola de impresion: {{queue.length}}</q-toolbar-title>
+      <q-btn icon="mdi-printer" flat dense round></q-btn>
     </q-toolbar>
-    <pre>{{page}}</pre>
+    <router-view />
   </div>
 </template>
 
 <script>
-import { ipcRenderer } from 'electron'
-
+import { state } from 'src/boot/print'
 export default {
-  name: 'Printer',
-  data () {
-    return {
-      queue: [],
-      closeAsap: false,
-      page: {
-        hello: remote
-      }
+  name: 'Print',
+  computed: {
+    queue () {
+      return state.queue
     }
-  },
-  methods: {
-    printNextItem () {
-      
-    },
-    queuePrintJob (event, content) {
-      this.queue.push(content)
-      this.startPrintQueue()
-    },
-    printJobSuccess (event, content) {
-      this.queue.shift()
-      this.printNextItem()
-    },
-    printJobFailure (event, content) {
-      this.logPrintError({ item: this.queue[0], error: content })
-      this.queue.shift()
-      this.printNextItem()
-    }
-  },
-  mounted () {
-    ipcRenderer.on('QUEUE_PRINT_JOB', this.queuePrintJob)
-    ipcRenderer.on('PRINT_JOB_SUCCESS', this.printJobSuccess)
-    ipcRenderer.on('PRINT_JOB_FAILURE', this.printJobFailure)
   }
 }
 </script>
