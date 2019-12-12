@@ -15,8 +15,11 @@ export default {
       ipcRenderer.send('PRINT', [
         {
           printOptions: {
-            deviceName: '',
-            silent: false
+            margins: {
+              marginType: 'none'
+            },
+            deviceName: 'Facturas',
+            silent: true
           },
           template: 'invoice',
           copy: false,
@@ -26,8 +29,11 @@ export default {
         },
         {
           printOptions: {
-            deviceName: '',
-            silent: false
+            margins: {
+              marginType: 'none'
+            },
+            deviceName: 'Facturas',
+            silent: true
           },
           template: 'invoice',
           copy: true,

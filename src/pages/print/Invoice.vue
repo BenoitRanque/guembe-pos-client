@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="q-pa-md">
     <div class="text-center">
       BIOCENTRO GUEMBE S.A
       <br>
@@ -13,8 +13,8 @@
     </div>
     <hr>
     <div class="text-center">FACTURA</div>
-    <!-- <div class="text-center" v-if="job.copy">Copia: Contabilidad</div>
-    <div class="text-center" v-else>Original: Cliente</div> -->
+    <div class="text-center" v-if="job && job.copy">Copia: Contabilidad</div>
+    <div class="text-center" v-else>Original: Cliente</div>
     <hr>
       <div class="text-center">
         NIT: 122103025
@@ -88,13 +88,16 @@
 
 <script>
 import QrCode from 'qrcode.vue'
-// import { state } from 'src/boot/print'
+import { state } from 'src/boot/print'
 import NumberToWords from 'number2words/src/number2words'
 
 export default {
   name: 'DefaultPrintTemplate',
   components: { QrCode },
   computed: {
+    job () {
+      return state.job
+    },
     code () {
       return [
         '122103025', // Business NIT
