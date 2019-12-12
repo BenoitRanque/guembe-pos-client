@@ -172,7 +172,7 @@ module.exports = function (ctx) {
       // keep in sync with /src-electron/main-process/electron-main
       // > BrowserWindow > webPreferences > nodeIntegration
       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
-      nodeIntegration: false,
+      nodeIntegration: true,
 
       extendWebpack (cfg) {
         // do something with Electron main process Webpack cfg

@@ -12,11 +12,11 @@ export default {
   name: 'PageIndex',
   methods: {
     print () {
-      ipcRenderer.send('QUEUE_PRINT_JOB', [
+      ipcRenderer.send('PRINT', [
         {
           printOptions: {
-            deviceName: 'Facturas',
-            silent: true
+            deviceName: '',
+            silent: false
           },
           template: 'invoice',
           copy: false,
@@ -26,11 +26,11 @@ export default {
         },
         {
           printOptions: {
-            deviceName: 'Facturas',
-            silent: true
+            deviceName: '',
+            silent: false
           },
           template: 'invoice',
-          copy: false,
+          copy: true,
           job: {
             message: 'copy'
           }

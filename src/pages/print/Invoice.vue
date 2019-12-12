@@ -13,8 +13,8 @@
     </div>
     <hr>
     <div class="text-center">FACTURA</div>
-    <div class="text-center" v-if="job.copy">Copia: Contabilidad</div>
-    <div class="text-center" v-else>Original: Cliente</div>
+    <!-- <div class="text-center" v-if="job.copy">Copia: Contabilidad</div>
+    <div class="text-center" v-else>Original: Cliente</div> -->
     <hr>
       <div class="text-center">
         NIT: 122103025
@@ -88,7 +88,7 @@
 
 <script>
 import QrCode from 'qrcode.vue'
-import { state } from 'src/boot/print'
+// import { state } from 'src/boot/print'
 import NumberToWords from 'number2words/src/number2words'
 
 export default {
@@ -118,10 +118,10 @@ export default {
       const [ , wholes, cents ] = num.toFixed(2).match(/(\d+)\.(\d\d)/)
 
       return `${number2words.convert(wholes).toUpperCase()} ${cents}/100 Bs.`
-    },
-    job () {
-      return state.queue.length > 0 ? state.queue[0] : null
     }
+    // job () {
+    //   return state.queue.length > 0 ? state.queue[0] : null
+    // }
   }
 }
 </script>

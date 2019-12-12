@@ -151,13 +151,16 @@ function createPrintWindow () {
         // keep in sync with /quasar.conf.js > electron > nodeIntegration
         // (where its default value is "true")
         // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
-        nodeIntegration: false
+        nodeIntegration: true
       }
     })
 
     printWindow.loadURL(`${process.env.APP_URL}#print/`)
 
-    printWindow.once('ready-to-show', () => resolve(printWindow))
+    printWindow.once('ready-to-show', () => {
+      printWindow.show()
+      resolve(printWindow)
+    })
   })
 }
 
@@ -166,16 +169,16 @@ function print (printWindow, job) {
     printWindow.send('PRINT_JOB', job)
 
     ipcMain.on('PRINT_JOB_READY', (event, content) => {
-      // ignore messaje from other windows
-      if (BrowserWindow.fromWebContents(event.sender).id === printWindow.id) {
-        event.webContents.print(content.printOptions, (success, failureReason) => {
-          if (success) {
-            resolve(job)
-          } else {
-            reject(Object.assign(job, { failed: true, failureReason }))
-          }
-        })
-      }
+      // ignore message from other windows
+      // if (BrowserWindow.fromWebContents(event.sender).id === printWindow.id) {
+      event.sender.print(content.printOptions, (success, failureReason) => {
+        if (success) {
+          resolve(job)
+        } else {
+          reject(Object.assign(job, { failed: true, failureReason }))
+        }
+      })
+      // }
     })
   })
 }
@@ -188,7 +191,14 @@ async function handlePrintJobs (jobs) {
   }
 
   for (const job of jobs) {
-    await print(printWindow, job)
+    try {
+      console.log('printing job', job)
+      await print(printWindow, job)
+      await new Promise(resolve => setTimeout(resolve, 5000))
+    } catch (error) {
+      // handle error here
+      console.error(error)
+    }
   }
 
   printWindow.close()
