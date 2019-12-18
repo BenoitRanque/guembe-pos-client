@@ -1,7 +1,7 @@
 
 const routes = [
   {
-    path: '/print',
+    path: '/print', // print path is used by usually invisible printing windows.
     component: () => import('layouts/Print.vue'),
     children: [
       { path: '', component: () => import('pages/print/Index.vue') },
@@ -14,7 +14,9 @@ const routes = [
     path: '/',
     component: () => import('layouts/MyLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Index.vue') }
+      { path: '', component: () => import('pages/Index.vue') },
+      { path: 'auth/login', component: () => import('pages/auth/Login.vue') },
+      { path: 'sales/rapid', component: () => import('pages/sales/Rapid.vue') }
     ]
   }
 ]

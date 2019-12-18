@@ -19,28 +19,30 @@ export default {
               marginType: 'none'
             },
             deviceName: 'Facturas',
-            silent: true
+            silent: false
           },
+          preview: false,
           template: 'invoice',
           copy: false,
           job: {
             message: 'original'
           }
-        },
-        {
-          printOptions: {
-            margins: {
-              marginType: 'none'
-            },
-            deviceName: 'Facturas',
-            silent: true
-          },
-          template: 'invoice',
-          copy: true,
-          job: {
-            message: 'copy'
-          }
         }
+        // {
+        //   printOptions: {
+        //     margins: {
+        //       marginType: 'none'
+        //     },
+        //     deviceName: 'Facturas',
+        //     silent: false
+        //   },
+        //   template: 'invoice',
+        //   preview: false,
+        //   copy: true,
+        //   job: {
+        //     message: 'copy'
+        //   }
+        // }
       ])
     }
   }

@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md">
+  <div class="q-pa-md" @ready="ready">
     <div class="text-center">
       BIOCENTRO GUEMBE S.A
       <br>
@@ -122,10 +122,42 @@ export default {
 
       return `${number2words.convert(wholes).toUpperCase()} ${cents}/100 Bs.`
     }
-    // job () {
-    //   return state.queue.length > 0 ? state.queue[0] : null
-    // }
+  },
+  methods: {
+    ready () {
+      console.log('ready')
+    }
+  },
+  updated () {
+    console.log('updated')
+    if (!state.ready && state.onReady !== null) {
+      state.onReady()
+    }
+  },
+  mounted () {
+    console.log('mounted')
+    if (!state.ready && state.onReady !== null) {
+      state.onReady()
+    }
   }
+  // updated () {
+  //   this.ready = true
+  //   this.$nextTick(() => {
+  //     setImmediate(() => {
+  //       state.onReady()
+  //       this.ready = false
+  //     })
+  //   })
+  // },
+  // mounted () {
+  //   this.ready = true
+  //   this.$nextTick(() => {
+  //     setImmediate(() => {
+  //       state.onReady()
+  //       this.ready = false
+  //     })
+  //   })
+  // }
 }
 </script>
 

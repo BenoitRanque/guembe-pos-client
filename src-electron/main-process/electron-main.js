@@ -19,6 +19,7 @@ function createWindow () {
     height: 600,
     useContentSize: true,
     show: false,
+    autoHideMenuBar: true,
     // kiosk: true,
     webPreferences: {
       // keep in sync with /quasar.conf.js > electron > nodeIntegration
@@ -36,7 +37,7 @@ function createWindow () {
     mainWindow = null
   })
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.once('ready-to-show', () => {
     mainWindow.show()
   })
 }

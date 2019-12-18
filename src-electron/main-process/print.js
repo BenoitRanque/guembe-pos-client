@@ -23,12 +23,23 @@ export async function handlePrintJobs (...jobs) {
     while (queue.length > 0) {
       const job = queue.shift()
 
-      if (!printWindow) {
-        console.log('creating window...')
-        await createPrintWindow()
-      }
+      if (job.preview) {
+        await createPrintWindow((event) => {
+          event.sender.webContents.send('PRINT_JOB_PREVIEW', Object.assign(job, {
+            printers: event.sender.webContents.getPrinters()
+          }))
+        })
+      } else {
+        if (!printWindow) {
+          printWindow = await createPrintWindow()
 
-      await print(job)
+          printWindow.on('closed', () => {
+            printWindow = null
+          })
+        }
+
+        await print(printWindow, job)
+      }
     }
 
     if (shouldCloseAsap) {
@@ -39,41 +50,89 @@ export async function handlePrintJobs (...jobs) {
   }
 }
 
-async function createPrintWindow () {
-  printWindow = new BrowserWindow({
-    width: 400,
-    height: 600,
-    useContentSize: true,
-    show: false,
-    webPreferences: {
-      // keep in sync with /quasar.conf.js > electron > nodeIntegration
-      // (where its default value is "true")
-      // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
-      nodeIntegration: true
-    }
+function createPrintWindow (ready = function ready () {}) {
+  return new Promise(async resolve => {
+    const printWindow = new BrowserWindow({
+      width: 400,
+      height: 600,
+      useContentSize: true,
+      show: false,
+      autoHideMenuBar: true,
+      webPreferences: {
+        // keep in sync with /quasar.conf.js > electron > nodeIntegration
+        // (where its default value is "true")
+        // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
+        nodeIntegration: true
+      }
+    })
+
+    printWindow.once('ready-to-show', () => {
+      printWindow.show()
+      ready()
+      resolve(printWindow)
+    })
+
+    printWindow.loadURL(`${process.env.APP_URL}#print/`)
   })
-
-  printWindow.on('closed', () => {
-    printWindow = null
-  })
-
-  await printWindow.loadURL(`${process.env.APP_URL}#print/`)
-
-  return printWindow
 }
 
-function print (job) {
+// async function createPrintWindow (ready = function ready () {}) {
+//   const printWindow = new BrowserWindow({
+//     width: 400,
+//     height: 600,
+//     useContentSize: true,
+//     show: false,
+//     autoHideMenuBar: true,
+//     webPreferences: {
+//       // keep in sync with /quasar.conf.js > electron > nodeIntegration
+//       // (where its default value is "true")
+//       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
+//       nodeIntegration: true
+//     }
+//   })
+
+//   printWindow.once('ready-to-show', () => {
+//     console.log('print window ready')
+//     printWindow.show()
+//     ready()
+//   })
+
+//   console.log('print window loaded')
+
+//   return printWindow
+// }
+
+function print (printWindow, job) {
   return new Promise((resolve, reject) => {
     printWindow.webContents.send('PRINT_JOB', job)
 
-    ipcMain.once('PRINT_JOB_READY', (event, content) => {
-      event.sender.print(content.printOptions, (success, failureReason) => {
-        if (success) {
-          resolve(job)
-        } else {
-          resolve(Object.assign(job, { failed: true, failureReason }))
-        }
-      })
+    ipcMain.on('PRINT_JOB_READY', function listener (event, content) {
+      if (BrowserWindow.fromWebContents(event.sender).id === printWindow.id) {
+        ipcMain.removeListener('PRINT_JOB_READY', listener)
+
+        event.sender.print(content.printOptions, (success, failureReason) => {
+          if (success) {
+            resolve(job)
+          } else {
+            resolve(Object.assign(job, { failed: true, failureReason }))
+          }
+        })
+      }
     })
   })
 }
+// handle printing with preview
+ipcMain.on('PRINT_JOB_PREVIEW_READY', (event) => {
+  BrowserWindow.fromWebContents(event.sender).show()
+})
+
+ipcMain.on('PRINT_JOB_PREVIEW_PRINT', (event, content) => {
+  event.sender.print(content.printOptions, (success, failureReason) => {
+    BrowserWindow.fromWebContents(event.sender).close()
+  })
+})
+
+ipcMain.handle('READY', () => {
+  console.log('window ready')
+  return 'string'
+})
