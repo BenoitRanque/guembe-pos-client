@@ -36,6 +36,8 @@ export async function handlePrintJobs (...jobs) {
           printWindow.on('closed', () => {
             printWindow = null
           })
+
+          await new Promise(resolve => setTimeout(resolve, 3000))
         }
 
         await print(printWindow, job)
@@ -76,32 +78,6 @@ function createPrintWindow (ready = function ready () {}) {
   })
 }
 
-// async function createPrintWindow (ready = function ready () {}) {
-//   const printWindow = new BrowserWindow({
-//     width: 400,
-//     height: 600,
-//     useContentSize: true,
-//     show: false,
-//     autoHideMenuBar: true,
-//     webPreferences: {
-//       // keep in sync with /quasar.conf.js > electron > nodeIntegration
-//       // (where its default value is "true")
-//       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
-//       nodeIntegration: true
-//     }
-//   })
-
-//   printWindow.once('ready-to-show', () => {
-//     console.log('print window ready')
-//     printWindow.show()
-//     ready()
-//   })
-
-//   console.log('print window loaded')
-
-//   return printWindow
-// }
-
 function print (printWindow, job) {
   return new Promise((resolve, reject) => {
     printWindow.webContents.send('PRINT_JOB', job)
@@ -121,18 +97,26 @@ function print (printWindow, job) {
     })
   })
 }
-// handle printing with preview
-ipcMain.on('PRINT_JOB_PREVIEW_READY', (event) => {
-  BrowserWindow.fromWebContents(event.sender).show()
-})
 
-ipcMain.on('PRINT_JOB_PREVIEW_PRINT', (event, content) => {
-  event.sender.print(content.printOptions, (success, failureReason) => {
-    BrowserWindow.fromWebContents(event.sender).close()
+export async function initPrinting () {
+  // handle printing with preview
+  ipcMain.on('PRINT_JOB_PREVIEW_READY', (event) => {
+    BrowserWindow.fromWebContents(event.sender).show()
   })
-})
 
-ipcMain.handle('READY', () => {
-  console.log('window ready')
-  return 'string'
-})
+  ipcMain.on('PRINT_JOB_PREVIEW_PRINT', (event, content) => {
+    event.sender.print(content.printOptions, (success, failureReason) => {
+      BrowserWindow.fromWebContents(event.sender).close()
+    })
+  })
+
+  printWindow = await createPrintWindow()
+
+  printWindow.on('closed', () => {
+    printWindow = null
+  })
+
+  await new Promise(resolve => setTimeout(resolve, 3000))
+
+  ipcMain.on('PRINT', (event, jobs) => Array.isArray(jobs) ? handlePrintJobs(...jobs) : handlePrintJobs(jobs))
+}
