@@ -7,10 +7,11 @@ module.exports = function (ctx) {
     // --> boot files are part of "main.js"
     // https://quasar.dev/quasar-cli/cli-documentation/boot-files
     boot: [
-      // 'axios',
+      'composition-api',
       'print',
       'gql',
-      'restoreSession'
+      'restoreSession',
+      'init-sales'
     ],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
@@ -51,7 +52,8 @@ module.exports = function (ctx) {
       // Quasar plugins
       plugins: [
         'Notify',
-        'Dialog'
+        'Dialog',
+        'Loading'
       ]
     },
 

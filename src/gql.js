@@ -73,6 +73,6 @@ gql.handleError = function handleError (error) {
   }
 }
 
-export { GraphQLError }
+export { GraphQLError, gql }
 
 export default gql

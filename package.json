@@ -13,13 +13,14 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "@vue/composition-api": "^0.3.4",
     "axios": "^0.18.1",
     "number2words": "https://github.com/gpincheiraa/number2words",
     "qrcode.vue": "^1.7.0",
-    "quasar": "^1.0.0"
+    "quasar": "^1.5.11"
   },
   "devDependencies": {
-    "@quasar/app": "^1.0.0",
+    "@quasar/app": "^1.4.3",
     "@vue/eslint-config-standard": "^4.0.0",
     "babel-eslint": "^10.0.1",
     "devtron": "^1.4.0",

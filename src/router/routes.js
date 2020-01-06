@@ -16,7 +16,30 @@ const routes = [
     children: [
       { path: '', component: () => import('pages/Index.vue') },
       { path: 'auth/login', component: () => import('pages/auth/Login.vue') },
-      { path: 'sales/rapid', component: () => import('pages/sales/Rapid.vue') }
+      {
+        path: 'sales/rapid',
+        component: () => import('pages/sales/Rapid.vue'),
+        children: [
+          {
+            path: '',
+            redirect: 'catalog'
+          },
+          {
+            path: 'catalog',
+            components: {
+              left: () => import('pages/sales/Catalog.vue'),
+              right: () => import('pages/sales/Cart.vue')
+            }
+          },
+          {
+            path: 'checkout',
+            components: {
+              left: () => import('pages/sales/Cart.vue'),
+              right: () => import('pages/sales/Checkout.vue')
+            }
+          }
+        ]
+      }
     ]
   }
 ]

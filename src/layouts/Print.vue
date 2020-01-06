@@ -22,21 +22,19 @@
 </template>
 
 <script>
-import { state } from 'src/boot/print'
-import { ipcRenderer } from 'electron'
 export default {
   name: 'PrintLayout',
   computed: {
     job () {
-      return state.job
+      return this.$print.state.job
     },
     printer: {
       get () {
-        return state.job ? state.job.printOptions.deviceName : null
+        return this.$print.state.job ? this.$print.state.job.printOptions.deviceName : null
       },
       set (value) {
-        if (state.job) {
-          state.job.printOptions.deviceName = value
+        if (this.$print.state.job) {
+          this.$print.state.job.printOptions.deviceName = value
         }
       }
     },
@@ -46,7 +44,7 @@ export default {
   },
   methods: {
     print () {
-      ipcRenderer.send('PRINT_JOB_PREVIEW_PRINT', this.job)
+      this.$print()
     }
   }
 }

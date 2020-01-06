@@ -88,7 +88,6 @@
 
 <script>
 import QrCode from 'qrcode.vue'
-import { state } from 'src/boot/print'
 import NumberToWords from 'number2words/src/number2words'
 
 export default {
@@ -96,7 +95,7 @@ export default {
   components: { QrCode },
   computed: {
     job () {
-      return state.job
+      return this.$print.state.job
     },
     code () {
       return [

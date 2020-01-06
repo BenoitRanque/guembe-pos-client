@@ -1,80 +1,102 @@
 <template>
-  <q-page padding>
-    <!-- content -->
-    <q-splitter :value="50">
-      <template v-slot:before>
-        <q-btn @click="loadItems">refresh catalog</q-btn>
-        <q-list>
-          <q-item v-for="(item, index) in catalog" :key="`catalog_${index}`">
-            <q-item-section>
-              <q-item-label>
-                {{item.ItemName}}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-btn dense icon="mdi-plus" @click="sale.items.unshift(Object.assign({ Quantity: 1 }, item))"></q-btn>
-            </q-item-section>
-          </q-item>
-        </q-list>
-        <!-- <pre>{{$store.state.sales}}</pre> -->
+  <q-page>
+    <q-layout container style="height: calc(100vh - 50px)">
+      <q-header>
+        <q-toolbar class="bg-secondary">
+          <client-select
+            @selected="setClient"
+            icon="mdi-pencil"
+            :label="client ? '' : 'Selecionar Cliente'"
+            flat
+            dense
+          >
+            <q-tooltip>Cambiar Cliente</q-tooltip>
+          </client-select>
+          <template v-if="client">
+            <q-toolbar-title shrink>
+              {{client.CardCode}}
+              -
+              {{client.CardName}}
+              <!-- Cliente: -->
+            </q-toolbar-title>
+          </template>
+          <q-space/>
+          <q-tabs>
+            <q-route-tab
+              icon="mdi-cart"
+              to="/sales/rapid/catalog"
+              exact
+            >
+              <q-tooltip>Catalogo</q-tooltip>
+            </q-route-tab>
+            <q-route-tab
+              icon="mdi-cash-register"
+              to="/sales/rapid/checkout"
+              exact
+            >
+              <q-tooltip>Checkout</q-tooltip>
+            </q-route-tab>
+          </q-tabs>
+          <q-inner-loading :showing="loading">
+            <q-spinner></q-spinner>
+          </q-inner-loading>
+        </q-toolbar>
+      </q-header>
 
-      </template>
-      <template v-slot:after>
-        <q-list>
-          <q-item dense>
-            <q-item-section side style="width: 4rem">
-              <q-item-label overline><strong>Cant</strong></q-item-label>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label overline><strong>Desc</strong></q-item-label>
-            </q-item-section>
-            <q-item-section side style="width: 4rem">
-              <q-item-label overline><strong>Precio</strong></q-item-label>
-            </q-item-section>
-            <q-item-section side style="width: 4rem">
-              <q-item-label overline><strong>Subtotal</strong></q-item-label>
-            </q-item-section>
-          </q-item>
-          <sales-item
-            v-for="(item, index) in sale.items"
-            :key="`item_${index}`"
-            :value="item"
-            @update="sale.items.splice(index, 1, $event)"
-            @remove="sale.items.splice(index, 1)"
-          ></sales-item>
-        </q-list>
-      </template>
-    </q-splitter>
+      <q-page-container>
+        <q-page>
+          <q-splitter v-model="split" style="height: calc(100vh - 100px)">
+            <template v-slot:before>
+              <router-view name="left"></router-view>
+              <div class="text-left q-pa-md" v-if="$route.path.endsWith('checkout')">
+                <q-btn size="lg" rounded color="primary" icon="mdi-arrow-left-bold" @click="$router.push('/sales/rapid/catalog')">Catalogo</q-btn>
+              </div>
+            </template>
+            <template v-slot:after>
+              <router-view name="right"></router-view>
+              <div class="text-right q-pa-md" v-if="!$route.path.endsWith('checkout')">
+                <q-btn size="lg" :disable="!$store.getters['sales/quickSale'].Items.length" rounded color="primary" icon-right="mdi-arrow-right-bold" @click="$router.push('/sales/rapid/checkout')">Checkout</q-btn>
+              </div>
+            </template>
+          </q-splitter>
+        </q-page>
+      </q-page-container>
+    </q-layout>
   </q-page>
 </template>
 
 <script>
-import SalesItem from 'components/sales/Item'
-import { mapActions, mapState } from 'vuex'
+import ClientSelect from 'components/sales/ClientSelect'
+import { computed, ref } from '@vue/composition-api'
+import store from 'src/store'
+import gql from 'src/gql'
 export default {
   name: 'RapidSales',
-  components: { SalesItem },
-  data () {
-    return {
-      sale: {
-        items: []
+  components: { ClientSelect },
+  setup (props, ctx) {
+    const loading = ref(false)
+
+    const client = computed(() => store.getters['sales/quickSale'].Client)
+
+    async function setClient (client) {
+      try {
+        loading.value = true
+
+        await store.dispatch('sales/SET_CLIENT', client)
+      } catch (error) {
+        gql.handleError(error)
+      } finally {
+        loading.value = false
       }
     }
-  },
-  computed: {
-    ...mapState('sales', ['catalog'])
-  },
-  methods: {
-    ...mapActions('sales', ['REFRESH_CATALOG']),
-    async loadItems () {
-      try {
-        await this.REFRESH_CATALOG()
-      } catch (error) {
-        this.$gql.handleError(error)
-      }
-    },
-    addItem (item) {
-      this.sale.items.unshift(item)
+
+    const split = ref(50)
+
+    return {
+      loading,
+      split,
+      setClient,
+      client
     }
   }
 }

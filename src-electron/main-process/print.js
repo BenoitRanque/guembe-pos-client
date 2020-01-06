@@ -14,6 +14,29 @@ export function closePrintWindowAsap () {
   }
 }
 
+export async function initPrinting () {
+  // handle printing with preview
+  ipcMain.on('PRINT_JOB_PREVIEW_READY', (event) => {
+    BrowserWindow.fromWebContents(event.sender).show()
+  })
+
+  ipcMain.on('PRINT_JOB_PREVIEW_PRINT', (event, content) => {
+    event.sender.print(content.printOptions, (success, failureReason) => {
+      BrowserWindow.fromWebContents(event.sender).close()
+    })
+  })
+
+  printWindow = await createPrintWindow()
+
+  printWindow.on('closed', () => {
+    printWindow = null
+  })
+
+  await new Promise(resolve => setTimeout(resolve, 3000))
+
+  ipcMain.on('PRINT', (event, jobs) => Array.isArray(jobs) ? handlePrintJobs(...jobs) : handlePrintJobs(jobs))
+}
+
 export async function handlePrintJobs (...jobs) {
   queue.push(...jobs)
 
@@ -96,27 +119,4 @@ function print (printWindow, job) {
       }
     })
   })
-}
-
-export async function initPrinting () {
-  // handle printing with preview
-  ipcMain.on('PRINT_JOB_PREVIEW_READY', (event) => {
-    BrowserWindow.fromWebContents(event.sender).show()
-  })
-
-  ipcMain.on('PRINT_JOB_PREVIEW_PRINT', (event, content) => {
-    event.sender.print(content.printOptions, (success, failureReason) => {
-      BrowserWindow.fromWebContents(event.sender).close()
-    })
-  })
-
-  printWindow = await createPrintWindow()
-
-  printWindow.on('closed', () => {
-    printWindow = null
-  })
-
-  await new Promise(resolve => setTimeout(resolve, 3000))
-
-  ipcMain.on('PRINT', (event, jobs) => Array.isArray(jobs) ? handlePrintJobs(...jobs) : handlePrintJobs(jobs))
 }
