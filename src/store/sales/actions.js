@@ -1,5 +1,38 @@
 import gql from 'src/gql'
 import { Notify } from 'quasar'
+import print from 'src/print'
+
+export async function LOAD_SALESPOINT ({ commit, rootState, rootGetters }) {
+  const { salespoint, pricelists } = await gql({
+    query: /* GraphQL */`
+      query ($Code: String!) SalesPoint {
+        pricelists {
+          PriceListNo
+          PriceListName
+        }
+        salespoint (Code: $Code) {
+          Code
+          Name
+          Catalog {
+            ItemCode
+            ItemName
+            AllowManualPrice
+            AllowCredit
+            AllowAffiliate
+            ItemPrices {
+              PriceList
+              Price
+            }
+          }
+        }
+      }
+    `,
+    variables: {
+      Code: rootState.config.SalesPointCode
+    }
+  })
+  console.log(salespoint, pricelists)
+}
 
 export async function REFRESH_CATALOG ({ commit, rootState, rootGetters }) {
   const { items } = await gql({
@@ -17,8 +50,8 @@ export async function REFRESH_CATALOG ({ commit, rootState, rootGetters }) {
     `,
     variables: {
       where: {
-        SalesPointID: {
-          _eq: rootState.config.SalesPointID
+        SalesPointCode: {
+          _eq: rootState.config.SalesPointCode
         }
       }
     },
@@ -119,8 +152,8 @@ export async function SET_CLIENT ({ commit, dispatch, state }, CardCode) {
   commit('INVOICE', {
     ...state.QuickSale.Invoice,
     PaymentGroupCode: client.PayTermsGrpCode,
-    U_NIT: client ? client.CardForeignName : 'SIN NOMBRE',
-    U_RAZSOC: client ? client.FederalTaxID : 0
+    U_RAZSOC: client ? client.CardForeignName : 'SIN NOMBRE',
+    U_NIT: client ? client.FederalTaxID : 0
   })
 }
 
@@ -192,7 +225,7 @@ export async function FINALIZE ({ state, getters }) {
     Quantity: quantity,
     PriceAfterVAT: priceList !== null ? getters.itemPrice(item.ItemPrices, priceList) : price
   }))
-  return gql({
+  const { quick_sale: documents } = await gql({
     query: /* GraphQL */`
       mutation CreateQuickSale ($Sale: QuickSaleInput!) {
         quick_sale (Sale: $Sale)
@@ -207,4 +240,23 @@ export async function FINALIZE ({ state, getters }) {
     },
     role: 'anonymous'
   })
+
+  documents.Invoices.forEach(Invoice => {
+    print({
+      template: 'invoice',
+      preview: true,
+      test: documents.Test,
+      printOptions: {
+        silent: true,
+        deviceName: '',
+        printBackground: true,
+        margins: {
+          marginType: 'none'
+        }
+      },
+      data: Invoice
+    })
+  })
+
+  return documents
 }

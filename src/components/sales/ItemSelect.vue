@@ -1,66 +1,161 @@
 <template>
-  <q-table
-    flat
-    :data="data"
-    :columns="columns"
-    row-key="ItemCode"
-    :pagination.sync="pagination"
-    :filter="filter"
-    hide-header
-    grid
-  >
-    <template v-slot:top>
-      <q-input class="col" autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
-        <template v-slot:prepend>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
-      <q-space></q-space>
-      <q-select
-        dense
-        class="col q-ml-sm"
-        label="Filtro de Grupo"
-        clearable
-        outlined
-        :options="itemGroups"
-        v-model="filterGroup"
-      ></q-select>
-      <q-select
-        dense
-        class="col q-ml-sm"
-        label="Filtro de SubGrupo"
-        clearable
-        outlined
-        v-if="filterGroup"
-        :disable="!filterGroup"
-        :options="itemSubGroups"
-        v-model="filterSubGroup"
-      ></q-select>
-    </template>
-    <template v-slot:item="props">
-      <item-select-item
-        :key="props.row.ItemCode"
-        class="q-ma-xs bg-blue-2 text-weight-bold cursor-pointer"
-        :item="props.row"
-        @selected="selected"
-      >
-
-      </item-select-item>
-    </template>
-  </q-table>
+  <q-btn @click="showDialog = true" v-bind="$attrs">
+    <slot/>
+    <q-dialog v-model="showDialog" persistent>
+      <q-card style="max-width: 90vw; width: 70vw; max-height: 90vh">
+        <q-bar>
+          Seleccionar Articulo
+          <q-space></q-space>
+          <q-btn flat dense icon="mdi-close" v-close-popup></q-btn>
+        </q-bar>
+        <q-table
+          class="q-px-sm"
+          flat
+          :data="data"
+          :columns="columns"
+          row-key="ItemCode"
+          :pagination.sync="pagination"
+          :filter="filter"
+          hide-header
+          grid
+        >
+          <template v-slot:top-left>
+            <q-input class="col" autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
+              <template v-slot:prepend>
+                <q-icon name="mdi-magnify" />
+              </template>
+            </q-input>
+          </template>
+          <template v-slot:item="props">
+            <q-card
+              :key="props.row.ItemCode"
+              @click="selected(props.row)"
+              v-close-popup
+              v-ripple
+              class="q-ma-xs bg-blue-2 text-weight-bold cursor-pointer"
+            >
+              <q-card-section>
+                <div class="tex-body2">
+                  {{props.row.ItemName}}
+                </div>
+                <div class="text-caption text-right" v-if="getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum)">
+                  {{formatPrice(getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum).Price)}}
+                </div>
+              </q-card-section>
+            </q-card>
+          </template>
+        </q-table>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="showSelectedItemDialog">
+      <q-card>
+        <q-bar>
+          Aggregar Item
+          <q-space></q-space>
+          <q-btn dense flat icon="mdi-close" v-close-popup></q-btn>
+        </q-bar>
+        <q-list v-if="SelectedItem.Item">
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>Articulo</q-item-label>
+              <q-item-label>{{SelectedItem.Item.ItemName}}</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-expansion-item>
+            <template v-slot:header>
+              <q-item-section>
+                <q-item-label caption>Precio Unitario (Click para opciones)</q-item-label>
+                <q-item-label>
+                  {{formatPrice(SelectedItem.Price)}}
+                </q-item-label>
+              </q-item-section>
+            </template>
+            <q-list dark class="bg-secondary">
+              <q-item v-if="SelectedItemPrimaryPrice" clickable @click="SelectedItem.Price = SelectedItemPrimaryPrice.Price">
+                <q-item-section>
+                  <q-item-label caption>{{SelectedItemPrimaryPrice.PriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(SelectedItemPrimaryPrice.Price)}}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item v-if="SelectedItemSecondaryPrice" clickable @click="SelectedItem.Price = SelectedItemSecondaryPrice.Price">
+                <q-item-section>
+                  <q-item-label caption>{{SelectedItemSecondaryPrice.PriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(SelectedItemSecondaryPrice.Price)}}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item v-if="SelectedItem.Item.AllowManualPrice" clickable>
+                <q-item-section>
+                  <q-item-label caption>Precio Manual</q-item-label>
+                  <q-item-label>
+                    <q-input
+                      suffix="BS"
+                      dark
+                      dense
+                      outlined
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      :value="SelectedItem.Price"
+                      @input="SelectedItem.Price = Number($event)"
+                    ></q-input>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-expansion-item>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>Cantidad</q-item-label>
+              <q-item-label>
+                {{SelectedItem.Quantity}}
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-btn :disable="SelectedItem.Quantity < 2" @click="SelectedItem.Quantity -= 1" round dense color="primary" icon="mdi-minus"></q-btn>
+            </q-item-section>
+            <q-item-section side>
+              <q-btn @click="SelectedItem.Quantity += 1" round dense color="primary" icon="mdi-plus"></q-btn>
+            </q-item-section>
+          </q-item>
+          <hr>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>
+                Subtotal
+              </q-item-label>
+              <q-item-label>{{formatPrice(itemSubTotal(SelectedItem.Price, SelectedItem.Quantity))}}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+        <q-card-actions align="center">
+          <q-btn @click="done" v-close-popup :disable="SelectedItem.Price === 0" class="q-mx-md q-mb-md" icon="mdi-check" size="lg" color="primary" label="Aggregar"></q-btn>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </q-btn>
 </template>
 
 <script>
-import ItemSelectItem from 'components/sales/ItemSelectItem'
-import { reactive, watch, toRefs, computed } from '@vue/composition-api'
+import { ref, reactive, toRefs, computed } from '@vue/composition-api'
 import store from 'src/store'
+import { formatPrice, itemSubTotal, getPrimaryPrice, getSecondaryPrice } from 'src/utils'
 
 export default {
-  name: 'clientSelect',
-  components: { ItemSelectItem },
+  name: 'ItemSelect',
+  props: {
+    BusinessPartner: {
+      type: Object,
+      default: null
+    }
+  },
   setup (props, { emit }) {
+    const showDialog = ref(false)
+
     const table = reactive({
-      columns: [],
+      columns: [
+        { name: 'ItemCode', field: 'ItemCode' },
+        { name: 'ItemName', field: 'ItemName' }
+      ],
       filter: '',
       filterGroup: '',
       filterSubGroup: '',
@@ -71,38 +166,57 @@ export default {
       loading: false
     })
 
-    watch(() => table.filterGroup, filterGroup => {
-      if (!filterGroup) {
-        table.filterSubGroup = ''
-      }
-    })
+    const data = computed(() => store.state.config.SalesPoint ? store.state.config.SalesPoint.Catalog : [])
 
-    const items = computed(() => store.state.sales.catalog)
-
-    const itemGroups = computed(() => Array.from(new Set(items.value.map(item => item.DisplayGroup))))
-    const itemSubGroups = computed(() => !table.filterGroup ? table.filterGroup : Array.from(new Set(items.value
-      .filter(item => item.DisplayGroup === table.filterGroup)
-      .map(item => item.SubDisplayGroup))))
-
-    const data = computed(() => {
-      return items.value.filter(item => {
-        if (table.filterGroup && table.filterGroup !== item.DisplayGroup) return false
-        if (table.filterSubGroup && table.filterSubGroup !== item.SubDisplayGroup) return false
-        return true
-      })
-    })
-
-    function selected (selectedItem) {
-      emit('selected', selectedItem)
-      table.filter = ''
+    function getItemPrice (Item, priceList) {
+      const price = Item.ItemPrices.find(list => list.PriceList === priceList)
+      return price && price.Price !== 0 ? price.Price : null
     }
 
+    const showSelectedItemDialog = ref(false)
+    const SelectedItem = reactive({
+      Item: null,
+      Quantity: 1,
+      Price: null
+    })
+
+    const SelectedItemPrimaryPrice = computed(() => {
+      if (!SelectedItem.Item || !props.BusinessPartner) return null
+      return getPrimaryPrice(SelectedItem.Item.ItemPrices, props.BusinessPartner.PriceListNum)
+    })
+    const SelectedItemSecondaryPrice = computed(() => {
+      if (!SelectedItem.Item) return null
+      return getSecondaryPrice(SelectedItem.Item.ItemPrices, SelectedItemPrimaryPrice.value)
+    })
+
+    function selected (Item) {
+      table.filter = ''
+
+      SelectedItem.Quantity = 1
+      SelectedItem.Item = Item
+      const PrimaryPrice = getPrimaryPrice(Item.ItemPrices, props.BusinessPartner.PriceListNum)
+      SelectedItem.Price = PrimaryPrice ? PrimaryPrice.Price : 0
+
+      showSelectedItemDialog.value = true
+    }
+
+    function done () {
+      emit('selected', Object.assign({}, SelectedItem))
+    }
     return {
+      showDialog,
+      getItemPrice,
+      formatPrice,
       ...toRefs(table),
-      itemGroups,
-      itemSubGroups,
+      itemSubTotal,
       data,
-      selected
+      selected,
+      done,
+      getPrimaryPrice,
+      SelectedItem,
+      SelectedItemPrimaryPrice,
+      SelectedItemSecondaryPrice,
+      showSelectedItemDialog
     }
   }
 }

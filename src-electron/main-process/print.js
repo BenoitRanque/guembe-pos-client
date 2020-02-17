@@ -91,9 +91,9 @@ function createPrintWindow (ready = function ready () {}) {
       }
     })
 
-    printWindow.once('ready-to-show', () => {
-      printWindow.show()
-      ready()
+    printWindow.once('ready-to-show', (event) => {
+      // printWindow.show()
+      ready(event)
       resolve(printWindow)
     })
 

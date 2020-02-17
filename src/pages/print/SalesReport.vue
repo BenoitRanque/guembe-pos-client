@@ -6,6 +6,6 @@
 
 <script>
 export default {
-  name: 'Bill'
+  name: 'SalesReport'
 }
 </script>

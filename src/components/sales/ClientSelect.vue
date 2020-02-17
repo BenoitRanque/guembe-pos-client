@@ -2,7 +2,7 @@
   <q-btn @click="showDialog = true" v-bind="$attrs">
     <slot/>
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="max-width: 90vw; width: 70vw; height: 90vh">
+      <q-card style="max-width: 90vw; width: 70vw;">
         <q-bar>
           Seleccionar Cliente
           <q-space></q-space>
@@ -18,7 +18,7 @@
           @request="onRequest"
         >
           <template v-slot:top-left>
-            <q-input autofocus borderless dense debounce="300" v-model="filter" placeholder="Buscar">
+            <q-input autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
               <template v-slot:prepend>
                 <q-icon name="mdi-magnify" />
               </template>
@@ -26,7 +26,7 @@
           </template>
           <template v-slot:body-cell-action="props">
             <q-td :props="props">
-              <q-btn size="sm" unelevated dense color="primary" v-close-popup @click="selected(props.row.CardCode)">Selecionar</q-btn>
+              <q-btn size="sm" unelevated dense color="primary" v-close-popup @click="selected(props.row)">Selecionar</q-btn>
             </q-td>
           </template>
         </q-table>
@@ -91,16 +91,24 @@ export default {
       try {
         table.loading = true
 
-        const { clients: { count, items } } = await gql({
+        const { business_partners: { count, items } } = await gql({
           query: /* GraphQL */`
             query ($limit: Int! $offset: Int! $search: String) {
-              clients (limit: $limit offset: $offset search: $search) {
+              business_partners (limit: $limit offset: $offset search: $search) {
                 count
                 items {
                   CardCode
                   CardName
                   CardForeignName
                   FederalTaxID
+                  PayTermsGrpCode
+                  Affiliate
+                  VatLiable
+                  PriceListNum
+                  PriceList {
+                    PriceListNo
+                    PriceListName
+                  }
                 }
               }
             }
@@ -130,8 +138,8 @@ export default {
       onRequest({ pagination: table.pagination, filter: table.filter })
     })
 
-    function selected (CardCode) {
-      emit('selected', CardCode)
+    function selected (BusinessPartner) {
+      emit('selected', BusinessPartner)
       table.filter = ''
     }
 

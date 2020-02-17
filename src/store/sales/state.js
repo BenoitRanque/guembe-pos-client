@@ -1,8 +1,4 @@
 export default {
-  //
-  catalog: [], // list of items that can be sold
-  pricelists: [],
-  creditcards: [],
   QuickSale: {
     Client: null,
     Items: [],
@@ -10,8 +6,8 @@ export default {
       VATExempt: false,
       Payment: null,
       PaymentGroupCode: -1, // TODO: us a configurable default value
-      U_NIT: 'SIN NOMBRE',
-      U_RAZSOC: '0'
+      U_RAZSOC: 'SIN NOMBRE',
+      U_NIT: '0'
     }
   }
   // sale: {

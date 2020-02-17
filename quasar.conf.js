@@ -10,8 +10,9 @@ module.exports = function (ctx) {
       'composition-api',
       'print',
       'gql',
-      'restoreSession',
-      'init-sales'
+      'readyMainWindow'
+      // 'restoreConfiguration',
+      // 'restoreSession'
     ],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
@@ -53,7 +54,8 @@ module.exports = function (ctx) {
       plugins: [
         'Notify',
         'Dialog',
-        'Loading'
+        'Loading',
+        'LocalStorage'
       ]
     },
 

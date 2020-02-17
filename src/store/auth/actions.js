@@ -9,14 +9,13 @@ function getRefreshDelay (token) {
 
   return (subtractFromDate(new Date(payload.exp * 1000), { minutes: 3 }).getTime() - new Date().getTime())
 }
-export async function LOGIN ({ commit, dispatch, rootState }, { EmployeeID, Password }) {
+export async function LOGIN ({ commit, dispatch }, { EmployeeID, Password }) {
   const query = /* GraphQL */`
-    query Login ($SalesPointID: Int! $Credentials: CredentialsInput!) {
-      auth: session_login (Credentials: $Credentials SalesPointID: $SalesPointID) {
+    query Login ($Credentials: CredentialsInput!) {
+      auth: session_login (Credentials: $Credentials) {
         token
         session {
           EmployeeID
-          SalesPointID
           SalesEmployeeCode
           SalesEmployeeName
           Roles
@@ -25,7 +24,6 @@ export async function LOGIN ({ commit, dispatch, rootState }, { EmployeeID, Pass
     }
   `
   const variables = {
-    SalesPointID: rootState.config.SalesPointID,
     Credentials: {
       EmployeeID,
       Password
@@ -45,7 +43,6 @@ export async function REFRESH_TOKEN ({ commit, dispatch }) {
         token
         session {
           EmployeeID
-          SalesPointID
           SalesEmployeeCode
           SalesEmployeeName
           Roles
@@ -91,4 +88,37 @@ export async function LOGOUT ({ commit, state }) {
     clearTimeout(state.refreshTokenTask)
     commit('REFRESH_TOKEN_TASK')
   }
+}
+
+export async function CHANGE_PASSWORD (ctx, { Credentials, NewPassword }) {
+  const query = /* GraphQL */`
+    mutation ($Credentials: CredentialsInput!, $NewPassword: String!) {
+      success: password_change (Credentials: $Credentials, NewPassword: $NewPassword)
+    }
+  `
+  // credentials must have EmployeeID, Password properties
+  const variables = {
+    Credentials,
+    NewPassword
+  }
+
+  const { success } = await gql({ query, variables })
+
+  return success
+}
+export async function RESET_PASSWORD (ctx, { SAPB1Credentials, EmployeeID, NewPassword }) {
+  const query = /* GraphQL */`
+    mutation ($SAPB1Credentials: SAPB1CredentialsInput!, $EmployeeID: Int!, $NewPassword: String!) {
+      success: password_reset (SAPB1Credentials: $SAPB1Credentials, EmployeeID: $EmployeeID, NewPassword: $NewPassword)
+    }
+  `
+  const variables = {
+    SAPB1Credentials,
+    EmployeeID,
+    NewPassword
+  }
+
+  const { success } = await gql({ query, variables })
+
+  return success
 }

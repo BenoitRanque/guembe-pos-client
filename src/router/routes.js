@@ -7,7 +7,7 @@ const routes = [
       { path: '', component: () => import('pages/print/Index.vue') },
       { path: 'invoice', component: () => import('pages/print/Invoice.vue') },
       { path: 'bill', component: () => import('pages/print/Bill.vue') },
-      { path: 'note', component: () => import('pages/print/Note.vue') }
+      { path: 'order', component: () => import('pages/print/Order.vue') }
     ]
   },
   {
@@ -15,31 +15,9 @@ const routes = [
     component: () => import('layouts/MyLayout.vue'),
     children: [
       { path: '', component: () => import('pages/Index.vue') },
-      { path: 'auth/login', component: () => import('pages/auth/Login.vue') },
-      {
-        path: 'sales/rapid',
-        component: () => import('pages/sales/Rapid.vue'),
-        children: [
-          {
-            path: '',
-            redirect: 'catalog'
-          },
-          {
-            path: 'catalog',
-            components: {
-              left: () => import('pages/sales/Catalog.vue'),
-              right: () => import('pages/sales/Cart.vue')
-            }
-          },
-          {
-            path: 'checkout',
-            components: {
-              left: () => import('pages/sales/Cart.vue'),
-              right: () => import('pages/sales/Checkout.vue')
-            }
-          }
-        ]
-      }
+      { path: 'settings', component: () => import('pages/Settings.vue') },
+      { path: 'password', component: () => import('pages/Password.vue') },
+      { path: 'quicksale', component: () => import('pages/QuickSale.vue') }
     ]
   }
 ]

@@ -1,31 +1,12 @@
 <template>
   <q-page class="flex flex-center">
-    <q-btn @click="print">Print</q-btn>
-    <img alt="Quasar logo" src="~assets/quasar-logo-full.svg">
+    <img alt="Quasar logo" style="width: 60vw; max-height: 60vh;" src="~assets/isologo.svg">
+    <pre>{{$store.state.auth.session}}</pre>
   </q-page>
 </template>
 
 <script>
 export default {
-  name: 'PageIndex',
-  methods: {
-    print () {
-      this.$print({
-        printOptions: {
-          margins: {
-            marginType: 'none'
-          },
-          deviceName: 'Facturas',
-          silent: false
-        },
-        preview: false,
-        template: 'invoice',
-        copy: false,
-        job: {
-          message: 'original'
-        }
-      })
-    }
-  }
+  name: 'PageIndex'
 }
 </script>

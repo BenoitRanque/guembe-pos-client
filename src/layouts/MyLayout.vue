@@ -13,13 +13,39 @@
 
         <q-toolbar-title>
           Guembe POS
+          <template v-if="$store.state.config.SalesPoint">
+          - {{$store.state.config.SalesPoint.Name}} ({{$store.state.config.SalesPoint.Code}})
+          </template>
         </q-toolbar-title>
 
         <template v-if="isAuthenticated">
-          Session Iniciada: {{SalesEmployeeName}}
+          <q-btn-dropdown flat>
+            <template v-slot:label>
+              <q-icon name="mdi-account-circle"></q-icon>
+              {{SalesEmployeeName}}
+            </template>
+            <q-list>
+              <q-item clickable @click="logout">
+                <q-item-section side>
+                  <q-icon name="mdi-logout"></q-icon>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>
+                    Cerrar Session
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
         </template>
         <template v-else>
-          Session No iniciada
+          <q-btn-dropdown flat>
+            <template v-slot:label>
+              Iniciar Session
+              <q-icon name="mdi-login"></q-icon>
+            </template>
+            <auth-login></auth-login>
+          </q-btn-dropdown>
         </template>
       </q-toolbar>
     </q-header>
@@ -32,14 +58,28 @@
     >
       <q-list>
         <q-item-label header>Essential Links</q-item-label>
-        <q-item to="/auth/login">
+        <q-item to="/" exact>
           <q-item-section>
             <q-item-label>
-              Login
+              Inicio
             </q-item-label>
           </q-item-section>
         </q-item>
-        <q-item to="/sales/rapid">
+        <q-item to="/settings" v-if="isAuthorized('administrador')">
+          <q-item-section>
+            <q-item-label>
+              Configuracion
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/password">
+          <q-item-section>
+            <q-item-label>
+              Contraseña
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/quicksale" v-if="isAuthorized(['administrador', 'cajeros'])">
           <q-item-section>
             <q-item-label>
               Venta Rapida
@@ -56,16 +96,31 @@
 </template>
 
 <script>
+import AuthLogin from 'components/auth/Login'
 import { mapGetters } from 'vuex'
+import gql from 'src/gql'
 export default {
   name: 'MyLayout',
+  components: {
+    AuthLogin
+  },
   data () {
     return {
       leftDrawerOpen: false
     }
   },
   computed: {
-    ...mapGetters('auth', ['isAuthenticated', 'SalesEmployeeName'])
+    ...mapGetters('auth', ['isAuthenticated', 'isAuthorized', 'SalesEmployeeName'])
+  },
+  methods: {
+    async logout () {
+      try {
+        await this.$store.dispatch('auth/LOGOUT')
+        this.$router.push('/')
+      } catch (error) {
+        gql.handleError(error)
+      }
+    }
   }
 }
 </script>

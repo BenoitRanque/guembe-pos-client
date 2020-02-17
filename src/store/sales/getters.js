@@ -3,7 +3,7 @@ export function defaultPriceList (state, getters, rootState) {
 }
 
 export function clientPriceList (state, getters) {
-  if (state.QuickSale.client) {
+  if (state.QuickSale.Client) {
     return state.QuickSale.Client.PriceListNum
   } else {
     return getters.defaultPriceList

@@ -10,7 +10,7 @@
         </div>
       </q-card-section>
       <q-card-section>
-        <q-input class="q-mb-sm" dense v-model="EmployeeID" type="number" autocomplete="username" outlined label="Nombre De Usuario"></q-input>
+        <employee-select class="q-mb-sm" dense v-model="EmployeeID" outlined label="Usuario"></employee-select>
         <q-input dense v-model="Password" autocomplete="current-password" outlined label="Contraseña" type="password"></q-input>
       </q-card-section>
       <q-separator></q-separator>
@@ -25,9 +25,11 @@
 </template>
 
 <script>
+import EmployeeSelect from 'components/auth/EmployeeSelect'
 import { mapActions } from 'vuex'
 export default {
   name: 'Login',
+  components: { EmployeeSelect },
   data () {
     return {
       loading: false,

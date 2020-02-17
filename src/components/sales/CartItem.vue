@@ -1,53 +1,92 @@
 <template>
   <tr class="cursor-pointer" @click="edit">
-    <td class="text-right">{{item.quantity}}</td>
-    <td class="text-left">{{item.item.ItemName}}</td>
-    <td class="text-right">{{formatPrice(price)}}</td>
-    <td class="text-right">{{formatPrice(subtotal)}}</td>
+    <td class="text-right">{{value.Quantity}}</td>
+    <td class="text-left">{{value.Item.ItemName}}</td>
+    <td class="text-right">{{formatPrice(value.Price)}}</td>
+    <td class="text-right">{{formatPrice(itemSubTotal(value.Price, value.Quantity))}}</td>
     <q-dialog v-model="showDialog">
       <q-card>
         <q-bar>
-          Editar articulo
+          Articulo en Carrito
           <q-space></q-space>
-          <q-btn flat dense icon="mdi-close" v-close-popup></q-btn>
+          <q-btn dense flat icon="mdi-close" v-close-popup></q-btn>
         </q-bar>
-        <q-markup-table>
-          <tbody>
-            <tr>
-              <td colspan="2">{{item.item.ItemName}}</td>
-            </tr>
-            <tr>
-              <td>Precio Unitario</td>
-              <td class="text-right">
-                <item-price editable v-model="itemUpdate.priceList" :item-prices="item.item.ItemPrices"></item-price>
-              </td>
-            </tr>
-            <tr>
-              <td>Cantidad</td>
-              <td>
-                <div class="text-right justify-end row items-center q-gutter-x-sm">
-                  <q-btn-group rounded outline>
-                    <q-btn icon="mdi-minus" color="primary" outline dense round @click="itemUpdate.quantity -= 1" :disable="itemUpdate.quantity < 2"></q-btn>
-                    <q-btn icon="mdi-plus" color="primary" outline dense round @click="itemUpdate.quantity += 1"></q-btn>
-                  </q-btn-group>
-                  <div class="text-weight-bold">
-                    {{itemUpdate.quantity}}
-                  </div>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>Subtotal</td>
-              <td class="text-right">
-                {{formatPrice(updateSubtotal)}}
-              </td>
-            </tr>
-          </tbody>
-        </q-markup-table>
-        <q-separator></q-separator>
+        <q-list>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>Articulo</q-item-label>
+              <q-item-label>{{value.Item.ItemName}}</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-expansion-item>
+            <template v-slot:header>
+              <q-item-section>
+                <q-item-label caption>Precio Unitario (Click para opciones)</q-item-label>
+                <q-item-label>
+                  {{formatPrice(value.Price)}}
+                </q-item-label>
+              </q-item-section>
+            </template>
+            <q-list dark class="bg-secondary">
+              <q-item v-if="PrimaryPrice" clickable @click="ItemUpdate.Price = PrimaryPrice.Price">
+                <q-item-section>
+                  <q-item-label caption>{{PrimaryPrice.PriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(PrimaryPrice.Price)}}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item v-if="SecondaryPrice" clickable @click="ItemUpdate.Price = SecondaryPrice.Price">
+                <q-item-section>
+                  <q-item-label caption>{{SecondaryPrice.PriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(SecondaryPrice.Price)}}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item v-if="value.Item.AllowManualPrice" clickable>
+                <q-item-section>
+                  <q-item-label caption>Precio Manual</q-item-label>
+                  <q-item-label>
+                    <q-input
+                      suffix="BS"
+                      dark
+                      dense
+                      outlined
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      :value="ItemUpdate.Price"
+                      @input="ItemUpdate.Price = Number($event)"
+                    ></q-input>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-expansion-item>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>Cantidad</q-item-label>
+              <q-item-label>
+                {{ItemUpdate.Quantity}}
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-btn :disable="ItemUpdate.Quantity < 2" @click="ItemUpdate.Quantity -= 1" round dense color="primary" icon="mdi-minus"></q-btn>
+            </q-item-section>
+            <q-item-section side>
+              <q-btn @click="ItemUpdate.Quantity += 1" round dense color="primary" icon="mdi-plus"></q-btn>
+            </q-item-section>
+          </q-item>
+          <hr>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>
+                Subtotal
+              </q-item-label>
+              <q-item-label>{{formatPrice(itemSubTotal(ItemUpdate.Price, ItemUpdate.Quantity))}}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
         <q-card-actions align="around">
-          <q-btn v-close-popup flat color="negative" @click="remove">quitar</q-btn>
-          <q-btn v-close-popup flat @click="update">guardar</q-btn>
+          <q-btn @click="remove" color="negative">Quitar</q-btn>
+          <q-btn @click="update" color="positive" :disable="!canUpdate">Guardar Cambios</q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -55,65 +94,52 @@
 </template>
 
 <script>
-import ItemPrice from 'components/sales/ItemPrice'
-import { computed, ref, reactive } from '@vue/composition-api'
-import store from 'src/store'
 import { Dialog } from 'quasar'
+import { ref, reactive, computed } from '@vue/composition-api'
+import { formatPrice, itemSubTotal, getPrimaryPrice, getSecondaryPrice } from 'src/utils'
 export default {
   name: 'CartItem',
-  components: { ItemPrice },
   props: {
-    index: {
-      type: Number,
+    value: {
+      type: Object,
       required: true
     },
-    item: {
+    BusinessPartner: {
       type: Object,
       required: true
     }
   },
-  setup (props) {
-    const formatPrice = store.getters['sales/formatPrice']
-    const itemPrice = store.getters['sales/itemPrice']
-    const itemSubtotal = store.getters['sales/itemSubtotal']
-
-    const price = computed(() => itemPrice(props.item.item.ItemPrices, props.item.priceList))
-    const subtotal = computed(() => itemSubtotal(price.value, props.item.quantity))
-
+  setup (props, { emit }) {
     const showDialog = ref(false)
 
-    const itemUpdate = reactive({
-      priceList: null,
-      quantity: 0
+    const ItemUpdate = reactive({
+      Quantity: 0,
+      Price: 0
     })
 
     function edit () {
-      itemUpdate.priceList = props.item.priceList
-      itemUpdate.quantity = props.item.quantity
+      ItemUpdate.Quantity = props.value.Quantity
+      ItemUpdate.Price = props.value.Price
 
       showDialog.value = true
     }
 
-    const updatePrice = computed(() => itemPrice(props.item.item.ItemPrices, itemUpdate.priceList))
-    const updateSubtotal = computed(() => itemSubtotal(updatePrice.value, itemUpdate.quantity))
+    const PrimaryPrice = computed(() => {
+      return getPrimaryPrice(props.value.Item.ItemPrices, props.BusinessPartner.PriceListNum)
+    })
+    const SecondaryPrice = computed(() => {
+      return getSecondaryPrice(props.value.Item.ItemPrices, PrimaryPrice.value)
+    })
 
     const canUpdate = computed(() => {
-      if (itemUpdate.priceList !== props.item.priceList) return true
-      if (itemUpdate.quantity !== props.item.quantity) return true
+      if (ItemUpdate.Quantity !== props.value.Quantity) return true
+      if (ItemUpdate.Price !== props.value.Price) return true
       return false
     })
 
     function update () {
-      const update = {}
-
-      if (itemUpdate.priceList !== props.item.priceList) {
-        update.priceList = itemUpdate.priceList
-      }
-      if (itemUpdate.quantity !== props.item.quantity) {
-        update.quantity = itemUpdate.quantity
-      }
-
-      store.commit('sales/UPDATE_ITEM', { item: update, index: props.index })
+      emit('update', Object.assign(props.value, ItemUpdate))
+      showDialog.value = false
     }
 
     function remove () {
@@ -122,19 +148,19 @@ export default {
         message: 'Confirmar',
         cancel: true
       }).onOk(() => {
-        store.commit('sales/REMOVE_ITEM', { index: props.index })
+        emit('remove')
+        showDialog.value = false
       })
     }
 
     return {
-      price,
-      subtotal,
       formatPrice,
+      itemSubTotal,
+      PrimaryPrice,
+      SecondaryPrice,
+      ItemUpdate,
       showDialog,
       edit,
-      itemUpdate,
-      updatePrice,
-      updateSubtotal,
       canUpdate,
       update,
       remove

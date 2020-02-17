@@ -3,7 +3,6 @@ import Vuex from 'vuex'
 
 import config from './config'
 import auth from './auth'
-import sales from './sales'
 
 Vue.use(Vuex)
 
@@ -30,8 +29,7 @@ Vue.use(Vuex)
 const Store = new Vuex.Store({
   modules: {
     config,
-    auth,
-    sales
+    auth
   },
 
   // enable strict mode (adds overhead!)

@@ -3,7 +3,7 @@ import { Notify } from 'quasar'
 import store from 'src/store'
 
 const api = axios.create({
-  baseURL: `http://${process.env.DEV ? '192.168.0.202' : 'app.guembe.ti'}:6060/v1/graphql`,
+  baseURL: `http://${process.env.DEV ? '192.168.0.202' : 'app.guembe.ti'}:4040/graphql`,
   timeout: 30000,
   withCredentials: true
 })
@@ -53,16 +53,21 @@ class GraphQLError {
   }
 }
 
-async function gql ({ query = '', variables = {}, role = 'anonymous' }) {
-  const { data: { errors, data } } = await api.post('', { query, variables }, {
-    headers: {
-      'X-HASURA-ROLE': role
+async function gql ({ query = '', variables = {} }) {
+  try {
+    const response = await api.post('', { query, variables })
+    const { data: { errors, data } } = response
+
+    if (errors) throw new GraphQLError({ query, variables, errors })
+
+    return data
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.errors) {
+      throw new GraphQLError({ query, variables, errors: error.response.data.errors })
+    } else {
+      throw error
     }
-  })
-
-  if (errors) throw new GraphQLError({ query, variables, errors })
-
-  return data
+  }
 }
 
 gql.handleError = function handleError (error) {
@@ -73,6 +78,6 @@ gql.handleError = function handleError (error) {
   }
 }
 
-export { GraphQLError, gql }
+export { GraphQLError, gql, api }
 
 export default gql

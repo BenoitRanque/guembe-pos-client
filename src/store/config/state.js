@@ -1,10 +1,12 @@
 export default {
-  SalesPointID: 201,
+  SalesPointCode: '',
   ExchangeRate: 6.96,
-  // TODO: store cash pay terms group code
-  // TODO: store internal client group code (no cash, credit only)
-  defaults: {
-    CardCode: 'CL000001',
-    PriceListNo: 1
-  }
+  SalesPoint: null,
+  PriceLists: [],
+  CreditCards: []
+  // // TODO: store cash pay terms group code
+  // defaults: {
+  //   CardCode: 'CL000001',
+  //   PriceListNo: 1
+  // }
 }
