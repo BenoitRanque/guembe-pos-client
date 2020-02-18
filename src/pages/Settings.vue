@@ -3,9 +3,9 @@
     <div class="text-h4">Configuracion</div>
     <q-input label="Codigo de punto de venta" v-model="SalesPointCode"></q-input>
     <div class="row q-my-md">
-      <q-btn @click="saveConfig" icon="mdi-content-save">Guardar config</q-btn>
+      <q-btn @click="saveConfig" icon="mdi-content-save">Actualizar Configuracion</q-btn>
       <q-space/>
-      <q-btn @click="loadConfig" icon="mdi-refresh">Cargar config</q-btn>
+      <q-btn v-if="dev" @click="loadConfig" icon="mdi-refresh">Cargar Configuracion Local</q-btn>
     </div>
   </q-page>
 </template>
@@ -58,6 +58,7 @@ export default {
     store.dispatch('config/loadLocalConfig')
 
     return {
+      dev: computed(() => process.env.DEV),
       saveConfig,
       loadConfig,
       SalesPointCode

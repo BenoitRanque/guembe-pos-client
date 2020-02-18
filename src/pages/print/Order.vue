@@ -1,12 +1,12 @@
 <template>
   <div class="q-pa-lg q-mb-md" style="font-size: 11px; line-height: 1.2; font-family: 'Arial';">
-    <hr>
+    <q-separator />
     <div class="text-center text-weight-bold">Comanda</div>
-    <hr>
+    <q-separator />
     <div class="row"><span class="text-weight-bold">Punto de venta:</span><q-space/><span>{{Order.U_GPOS_SalesPointCode}}</span></div>
     <div class="row"><span class="text-weight-bold">Numero de orden:</span><q-space/><span>{{Order.U_GPOS_Serial}}</span></div>
     <div class="row"><span class="text-weight-bold">Fecha:</span><q-space/><span>{{displayDate(Order.DocDate)}}</span></div>
-    <hr>
+    <q-separator />
     <table class="full-width" style="table-layout: fixed;">
       <thead style="font-weight: 300">
         <tr>
@@ -15,7 +15,7 @@
         </tr>
         <tr>
           <th class="q-pa-none" colspan="4">
-            <hr>
+            <q-separator />
           </th>
         </tr>
       </thead>
@@ -26,7 +26,7 @@
         </tr>
       </tbody>
     </table>
-    <hr>
+    <q-separator />
     <div class="row"><span class="text-weight-bold">Impresión:</span><q-space/><span>{{formatDate(new Date(), 'HH:mm - DD/MM/YYYY')}}</span></div>
   </div>
 </template>

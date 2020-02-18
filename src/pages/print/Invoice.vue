@@ -1,35 +1,36 @@
 <template>
   <div class="q-pa-lg q-mb-md" style="font-size: 11px; line-height: 1.2; font-family: 'Arial';">
-    <template v-if="IsFiscalInvoice">
+    <template v-if="InvoiceType === 201">
       <div class="text-center text-weight-bold">BIOCENTRO GUEMBE S.A.</div>
       <div class="text-center">MARIPOSARIO ORQUIDEARIO Y TURISMO DE SALUD</div>
       <div class="text-center">{{Invoice.U_SUCURSAL}}</div>
       <div class="text-center">{{Invoice.U_DIRECCION}}</div>
       <div class="text-center">Tel: 3700700</div>
       <div class="text-center">{{Invoice.U_CIUDAD}} - {{Invoice.U_PAIS}}</div>
-      <hr>
+      <q-separator />
       <div class="text-center text-weight-bold">FACTURA</div>
       <div class="text-center" v-if="Copy">Copia: Contabilidad</div>
       <div class="text-center" v-else>Original: Cliente</div>
-      <hr>
+      <q-separator />
       <div class="row"><span class="text-weight-bold">NIT:</span><q-space/><span>122103025</span></div>
       <div class="row"><span class="text-weight-bold">Nro. Factura:</span><q-space/><span>{{Invoice.U_NRO_FAC}}</span></div>
       <div class="row"><span class="text-weight-bold">Nro. Autorización:</span><q-space/><span>{{Invoice.U_NROAUTOR}}</span></div>
-      <hr>
+      <q-separator />
       <div class="text-center">{{Invoice.U_ACTIVIDAD}}</div>
-      <hr>
+      <q-separator />
       <div class="row"><span class="text-weight-bold">Fecha:</span><q-space/><span>{{displayDate(Invoice.DocDate)}}</span></div>
       <div class="row"><span class="text-weight-bold">NIT/CI:</span><q-space/><span>{{Invoice.U_NIT}}</span></div>
       <div class="row"><span class="text-weight-bold">Razon Social:</span><q-space/><span>{{Invoice.U_RAZSOC}}</span></div>
     </template>
     <template v-else>
-      <div class="text-center text-weight-bold">Nota de Entrega</div>
+      <div class="text-center text-weight-bold" v-if="InvoiceType === 202">Nota de Entrega</div>
+      <div class="text-center text-weight-bold" v-else>Consumo Afiliado</div>
       <div class="text-center">(No es factura)</div>
-      <hr>
+      <q-separator />
       <div class="text-center" v-if="Copy">Copia: Contabilidad</div>
       <div class="text-center" v-else>Original: Cliente</div>
     </template>
-    <hr>
+    <q-separator />
     <table class="full-width" style="table-layout: fixed;">
       <thead style="font-weight: 300">
         <tr>
@@ -40,7 +41,7 @@
         </tr>
         <tr>
           <th class="q-pa-none" colspan="4">
-            <hr>
+            <q-separator />
           </th>
         </tr>
       </thead>
@@ -55,7 +56,7 @@
       <tfoot>
         <tr>
           <th class="q-pa-none" colspan="4">
-            <hr>
+            <q-separator />
           </th>
         </tr>
         <tr>
@@ -64,15 +65,15 @@
         </tr>
       </tfoot>
     </table>
-    <hr>
+    <q-separator />
     <div>
       <span class="text-weight-bold">Son:</span>
       <span>{{TotalLiteral}}</span>
     </div>
-    <template v-if="IsFiscalInvoice">
-      <hr>
+    <template v-if="InvoiceType === 201">
+      <q-separator />
       <div class="row"><span class="text-weight-bold">Codigo de Control:</span><q-space/><span>{{Invoice.U_CODCTRL}}</span></div>
-      <hr>
+      <q-separator />
       <div class="row"><span class="text-weight-bold">Fecha Limite de Emisión:</span><q-space/><span>{{displayDate(Invoice.U_FECHALIM)}}</span></div>
       <div class="text-center q-pa-md">
         <qr-code style="font-size: 0" :value="QRCode" :size="100" level="M"></qr-code>
@@ -80,14 +81,14 @@
       <div class="text-weight-bold">“ESTE  DOCUMENTO  FISCAL CONTRIBUYE AL DESARROLLO DE NUESTRO PAÍS, EL USO ILÍCITO ES SANCIONADO PENALMENTE”</div>
       <div>{{Invoice.U_LEYENDA}}</div>
     </template>
-    <hr>
+    <q-separator />
     <div class="row"><span class="text-weight-bold">Condicion de pago:</span><q-space/><span>{{Invoice.PaymentGroupCode === -1 ? 'Contado' : 'Credito'}}</span></div>
     <div class="row"><span class="text-weight-bold">Punto de venta:</span><q-space/><span>{{Invoice.U_GPOS_SalesPointCode}}</span></div>
     <div class="row"><span class="text-weight-bold">Numero de venta:</span><q-space/><span>{{Invoice.U_GPOS_Serial}}</span></div>
-    <template v-if="!IsFiscalInvoice">
+    <template v-if="InvoiceType !== 201">
       <div class="row"><span class="text-weight-bold">Fecha:</span><q-space/><span>{{displayDate(Invoice.DocDate)}}</span></div>
     </template>
-    <hr>
+    <q-separator />
     <div class="row"><span class="text-weight-bold">Impresión:</span><q-space/><span>{{formatDate(new Date(), 'HH:mm - DD/MM/YYYY')}}</span></div>
   </div>
 </template>
@@ -101,7 +102,10 @@ import print from 'src/print'
 import { displayDate } from 'src/utils'
 import { date } from 'quasar'
 const { formatDate } = date
-
+// Invoice types
+// 201 fiscal invoice
+// 202 non fiscal
+// 203 affiliate
 export default {
   name: 'InvoicePrintTemplate',
   components: { QrCode },
@@ -111,8 +115,8 @@ export default {
     const Copy = computed(() => job.value.copy)
 
     const Invoice = computed(() => job.value.data)
-    const IsFiscalInvoice = computed(() => Invoice.value.U_GPOS_Type === '201')
-    const QRCode = computed(() => IsFiscalInvoice.value ? [
+    const InvoiceType = computed(() => Invoice.value.U_GPOS_Type)
+    const QRCode = computed(() => InvoiceType.value === 201 ? [
       122103025, // NIT emisor (Número de Identificación Tributaria)
       Invoice.value.U_NRO_FAC, // Número de Factura
       Invoice.value.U_NROAUTOR, // Número de Autorización
@@ -144,7 +148,7 @@ export default {
     return {
       job,
       Invoice,
-      IsFiscalInvoice,
+      InvoiceType,
       Copy,
       QRCode,
       TotalLiteral,

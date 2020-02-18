@@ -25,6 +25,16 @@
               {{SalesEmployeeName}}
             </template>
             <q-list>
+              <q-item>
+                <q-item-section side>
+                  <q-icon name="mdi-account"></q-icon>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label caption>Roles</q-item-label>
+                  <q-item-label>{{$store.state.auth.session.Roles.join(', ')}}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator></q-separator>
               <q-item clickable @click="logout">
                 <q-item-section side>
                   <q-icon name="mdi-logout"></q-icon>
