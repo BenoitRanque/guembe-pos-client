@@ -36,7 +36,6 @@ function printSetup (router) {
 
   function handleJob (readyEvent) {
     return async (event, job) => {
-      console.log('Got job', job)
       state.job = job
 
       await navigate(`/print/${job.template}`)
