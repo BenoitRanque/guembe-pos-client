@@ -56,7 +56,10 @@ export async function loadSalesPointConfig ({ state, commit }) {
       Code: state.SalesPointCode
     }
   })
-  commit('SALESPOINT', salespoint)
+  commit('SALESPOINT', {
+    ...salespoint,
+    Catalog: salespoint.Catalog.sort((a, b) => a.ItemName.localeCompare(b.ItemName))
+  })
   commit('PRICELISTS', pricelists)
   commit('CREDITCARDS', creditcards)
 }

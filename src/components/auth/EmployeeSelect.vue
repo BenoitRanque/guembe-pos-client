@@ -77,7 +77,7 @@ export default {
           `
         })
 
-        EmployeeOptions.value = options
+        EmployeeOptions.value = options.sort((a, b) => a.label.localeCompare(b.label))
       } catch (error) {
         gql.handleError(error)
       } finally {

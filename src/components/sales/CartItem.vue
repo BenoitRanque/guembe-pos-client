@@ -49,11 +49,8 @@
                       dark
                       dense
                       outlined
-                      type="number"
-                      min="0"
-                      step="0.01"
                       :value="ItemUpdate.Price"
-                      @input="ItemUpdate.Price = Number($event)"
+                      @input="ItemUpdate.Price = /\d+(.\d\d?)?/.test($event) ? Number($event) : ItemUpdate.Price"
                     ></q-input>
                   </q-item-label>
                 </q-item-section>
@@ -64,7 +61,12 @@
             <q-item-section>
               <q-item-label caption>Cantidad</q-item-label>
               <q-item-label>
-                {{ItemUpdate.Quantity}}
+                <q-input
+                  :value="ItemUpdate.Quantity"
+                  @input="ItemUpdate.Quantity = Number.isInteger(Number($event)) && Number($event) >= 1 ? Number($event) : ItemUpdate.Quantity"
+                  dense
+                  borderless
+                ></q-input>
               </q-item-label>
             </q-item-section>
             <q-item-section side>
@@ -85,8 +87,8 @@
           </q-item>
         </q-list>
         <q-card-actions align="around">
-          <q-btn @click="remove" color="negative">Quitar</q-btn>
-          <q-btn @click="update" color="positive" :disable="!canUpdate">Guardar Cambios</q-btn>
+          <q-btn @click="remove" class="q-mx-md q-mb-md" color="negative">Quitar</q-btn>
+          <q-btn @click="update" class="q-mx-md q-mb-md" color="positive" :disable="!canUpdate">Guardar Cambios</q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -100,6 +102,10 @@ import { formatPrice, itemSubTotal, getPrimaryPrice, getSecondaryPrice } from 's
 export default {
   name: 'CartItem',
   props: {
+    editable: {
+      type: Boolean,
+      default: false
+    },
     value: {
       type: Object,
       required: true
@@ -118,10 +124,12 @@ export default {
     })
 
     function edit () {
-      ItemUpdate.Quantity = props.value.Quantity
-      ItemUpdate.Price = props.value.Price
+      if (props.editable) {
+        ItemUpdate.Quantity = props.value.Quantity
+        ItemUpdate.Price = props.value.Price
 
-      showDialog.value = true
+        showDialog.value = true
+      }
     }
 
     const PrimaryPrice = computed(() => {

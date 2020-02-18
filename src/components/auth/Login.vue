@@ -33,7 +33,7 @@ export default {
   data () {
     return {
       loading: false,
-      EmployeeID: '',
+      EmployeeID: null,
       Password: ''
     }
   },
@@ -47,7 +47,7 @@ export default {
     async login () {
       try {
         this.loading = true
-        await this.LOGIN({ EmployeeID: Number(this.EmployeeID), Password: this.Password })
+        await this.LOGIN({ EmployeeID: this.EmployeeID, Password: this.Password })
         this.$q.notify({ icon: 'mdi-check', color: 'positive', message: 'Session Iniciada' })
         this.$emit('success')
       } catch (error) {

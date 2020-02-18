@@ -2,48 +2,18 @@
   <q-page>
     <q-splitter style="height: calc(100vh - 50px)" v-model="split">
       <template v-slot:before>
-        <q-markup-table flat>
-          <thead>
-            <tr>
-              <th class="text-right" style="width: 10%">Cant.</th>
-              <th class="text-left" style="width: 70%">Desc.</th>
-              <th class="text-right" style="width: 10%">Precio</th>
-              <th class="text-right" style="width: 10%">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-if="!CartItems.length">
-              <tr>
-                <td colspan="4">
-                  No existen articulos en carrito
-                </td>
-              </tr>
-            </template>
-            <template v-else>
-              <tr
-                is="cart-item"
-                v-for="(item, index) in CartItems"
-                :key="index"
-                :business-partner="BusinessPartner"
-                :value="item"
-                @update="CartItems.splice(index, 1, $event)"
-                @remove="CartItems.splice(index, 1)"
-              ></tr>
-            </template>
-          </tbody>
-          <tfoot>
-            <tr>
-              <th colspan="4" style="padding: 0">
-                <q-separator color="black"></q-separator>
-              </th>
-            </tr>
-            <tr>
-              <th colspan="3" class="text-right">Total</th>
-              <th class="text-right">{{formatPrice(CartTotal)}}</th>
-            </tr>
-          </tfoot>
-        </q-markup-table>
-        <hr>
+        <shopping-cart v-model="CartItems">
+          <template v-slot:item="{ item, index }">
+            <cart-item
+              editable
+              :key="index"
+              :value="item"
+              :business-partner="BusinessPartner"
+              @update="CartItems.splice(index, 1, $event)"
+              @remove="CartItems.splice(index, 1)"
+            ></cart-item>
+          </template>
+        </shopping-cart>
         <div class="text-center">
           <item-select :business-partner="BusinessPartner" @selected="itemSelected" size="lg" icon="mdi-plus" color="primary">
             Aggregar Articulo
@@ -76,34 +46,107 @@
         <q-input class="q-ma-md" v-model="Invoice.U_NIT" outlined label="NIT/CI"></q-input>
         <q-input class="q-ma-md" v-model="Invoice.U_RAZSOC" outlined label="RAZON SOCIAL"></q-input>
         <q-select class="q-ma-md" v-model="Invoice.PaymentGroupCode" outlined emit-value :options="PaymentTypeOptions" map-options></q-select>
-        <div class="q-ma-md row items-center">
-          <payment
-            :disable="Invoice.PaymentGroupCode !== -1"
-            :total-due="CartTotal"
-            :value="Payment"
-            @input="Payment = $event"
-            @payment="Invoice.Payment = $event"
-            dense
-            outline
-            icon="mdi-credit-card-settings-outline"
-            color="primary"
-          >
-            <q-tooltip>
-              Detalles de forma de pago
-            </q-tooltip>
-          </payment>
+        <div class="q-ma-md row items-center no-wrap">
+          <div class="col-auto" v-if="isAuthorized(['administrador'])">
+            <q-checkbox dense v-model="IsTest" label="Prueba"></q-checkbox>
+            <br>
+            <q-checkbox dense v-model="ShowPrintPreview" :disable="!IsTest" label="Previsualizar"></q-checkbox>
+          </div>
           <q-space></q-space>
-          <q-btn :disable="!canCheckout" @click="checkout" :loading="checkoutLoading" icon="mdi-cash-register" size="lg" label="Checkout" color="primary"></q-btn>
-        </div>
-        <div class="q-ma-sm" v-if="isAuthorized(['administrador'])">
-          <q-checkbox v-model="IsTest" label="Prueba"></q-checkbox>
-          <q-checkbox v-model="ShowPrintPreview" :disable="!IsTest" label="Previsualizar"></q-checkbox>
+          <q-btn
+            @click="() => startCheckout()"
+            :disable="!canStartCheckout"
+            icon="mdi-cash-register"
+            size="lg"
+            label="Checkout"
+            color="primary"
+          ></q-btn>
         </div>
       </template>
     </q-splitter>
-    <q-inner-loading :showing="checkoutLoading">
-      <q-spinner></q-spinner>
-    </q-inner-loading>
+    <q-dialog v-model="showPaymentDialog" persistent>
+      <q-card style="width: 560px">
+        <q-bar>
+          Pago
+          <q-space></q-space>
+          <q-btn flat dense icon="mdi-close" v-close-popup></q-btn>
+        </q-bar>
+        <payment-input
+          :disable="Invoice.PaymentGroupCode !== PAYGROUP_NONE"
+          :total-due="CartTotal"
+          v-model="Payment"
+          @payment="startCheckout"
+          dense
+          outline
+          icon="mdi-credit-card-settings-outline"
+          color="primary"
+        ></payment-input>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="showCheckoutDialog" persistent>
+      <q-card>
+        <q-bar>
+          Checkout
+          <q-space></q-space>
+          <q-btn flat dense icon="mdi-close" v-close-popup></q-btn>
+        </q-bar>
+        <q-scroll-area style="height: 40vh; width: 560px">
+          <shopping-cart v-model="CartItems">
+            <template v-slot:item="{ item, index }">
+              <cart-item
+                :key="index"
+                :value="item"
+                :business-partner="BusinessPartner"
+                @update="CartItems.splice(index, 1, $event)"
+                @remove="CartItems.splice(index, 1)"
+              ></cart-item>
+            </template>
+          </shopping-cart>
+        </q-scroll-area>
+        <q-separator></q-separator>
+        <payment-details
+          :total-due="CartTotal"
+          :total-credit="Invoice.PaymentGroupCode === PAYGROUP_NONE ? 0 : CartTotal"
+          :value="Payment"
+        ></payment-details>
+        <q-separator></q-separator>
+        <q-card-actions align="center">
+          <q-btn class="q-mx-md q-mb-md" color="primary" @click="processCheckout">Finalizar Checkout</q-btn>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="showSaleDoneDialog" persistent>
+      <q-card>
+        <q-bar>
+          Checkout Exitoso
+          <q-space></q-space>
+          <q-btn dense flat icon="mdi-close" v-close-popup @click="resetSale"></q-btn>
+        </q-bar>
+        <q-scroll-area style="height: 40vh; width: 560px">
+          <shopping-cart v-model="CartItems">
+            <template v-slot:item="{ item, index }">
+              <cart-item
+                :key="index"
+                :value="item"
+                :business-partner="BusinessPartner"
+                @update="CartItems.splice(index, 1, $event)"
+                @remove="CartItems.splice(index, 1)"
+              ></cart-item>
+            </template>
+          </shopping-cart>
+        </q-scroll-area>
+        <q-separator></q-separator>
+        <payment-details
+          :total-due="CartTotal"
+          :total-credit="Invoice.PaymentGroupCode === PAYGROUP_NONE ? 0 : CartTotal"
+          :value="Payment"
+        ></payment-details>
+        <q-separator></q-separator>
+        <q-card-actions align="center">
+          <q-btn class="q-mx-md q-mb-md" flat v-close-popup @click="resetSale">Ok</q-btn>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -113,15 +156,25 @@ import print from 'src/print'
 import ClientSelect from 'components/sales/ClientSelect'
 import ItemSelect from 'components/sales/ItemSelect'
 import CartItem from 'components/sales/CartItem'
-import Payment from 'components/sales/Payment'
+import ShoppingCart from 'components/sales/ShoppingCart'
+import PaymentInput from 'components/sales/PaymentInput'
+import PaymentDetails from 'components/sales/PaymentDetails'
 import { ref, computed, reactive, watch } from '@vue/composition-api'
-import { formatPrice, getPrimaryPrice } from 'src/utils'
-import { Notify } from 'quasar'
+import { formatPrice, itemSubTotal, getPrimaryPrice } from 'src/utils'
+import { Notify, Loading } from 'quasar'
 import store from 'src/store'
 import { mapGetters } from 'vuex'
+const PAYGROUP_NONE = -1
 export default {
   name: 'QuickSale',
-  components: { ClientSelect, ItemSelect, CartItem, Payment },
+  components: {
+    ClientSelect,
+    ItemSelect,
+    PaymentInput,
+    PaymentDetails,
+    ShoppingCart,
+    CartItem
+  },
   computed: mapGetters('auth', ['isAuthorized']),
   setup () {
     const tab = ref('catalog')
@@ -157,16 +210,10 @@ export default {
     }
 
     const Invoice = reactive({
-      PaymentGroupCode: -1,
+      PaymentGroupCode: PAYGROUP_NONE,
       Payment: null,
       U_NIT: '0',
       U_RAZSOC: 'SIN NOMBRE'
-    })
-
-    watch(() => Invoice.PaymentGroupCode, PaymentGroupCode => {
-      if (PaymentGroupCode === -1) {
-        Invoice.Payment = null
-      }
     })
 
     const PaymentTypeOptions = computed(() => {
@@ -175,11 +222,11 @@ export default {
       if (!BusinessPartner.value || !BusinessPartner.value.Affiliate) {
         PaymentTypes.push({
           label: 'CONTADO',
-          value: -1
+          value: PAYGROUP_NONE
         })
       }
 
-      if (BusinessPartner.value && BusinessPartner.value.PayTermsGrpCode !== -1) {
+      if (BusinessPartner.value && BusinessPartner.value.PayTermsGrpCode !== PAYGROUP_NONE) {
         PaymentTypes.push({
           label: 'CREDITO',
           value: BusinessPartner.value.PayTermsGrpCode
@@ -238,6 +285,9 @@ export default {
       }
     })
 
+    const showPaymentDialog = ref(false)
+    const showCheckoutDialog = ref(false)
+
     const Payment = ref({
       CashEnabled: true,
       CashBS: 0,
@@ -250,12 +300,48 @@ export default {
       VoucherNum: ''
     })
 
-    const canCheckout = computed(() => {
+    watch(() => Invoice.PaymentGroupCode, PaymentGroupCode => {
+      if (PaymentGroupCode === PAYGROUP_NONE) {
+        Payment.value.CashEnabled = true
+        Payment.value.CashBS = CartTotal.value
+        Payment.value.CashUSD = 0
+        Payment.value.CardEnabled = false
+        Payment.value.CreditSum = 0
+        Payment.value.CreditCard = null
+        Payment.value.CreditCardNumber = ''
+        Payment.value.CardValidUntil = ''
+        Payment.value.VoucherNum = ''
+      } else {
+        Payment.value.CashEnabled = false
+        Payment.value.CashBS = 0
+        Payment.value.CashUSD = 0
+        Payment.value.CardEnabled = false
+        Payment.value.CreditSum = 0
+        Payment.value.CreditCard = null
+        Payment.value.CreditCardNumber = ''
+        Payment.value.CardValidUntil = ''
+        Payment.value.VoucherNum = ''
+      }
+    })
+
+    const canStartCheckout = computed(() => {
       if (!CartItems.value.length) return false
-      if (Invoice.PaymentGroupCode === -1 && !Invoice.Payment) return false
-      if (Invoice.PaymentGroupCode !== -1 && Invoice.Payment) return false
       return true
     })
+
+    function startCheckout (Payment = null) {
+      if (Payment && Invoice.PaymentGroupCode !== PAYGROUP_NONE) {
+        throw new Error(`Inconsistent state. Should not happen. Payment present when not required`)
+      } else if (!Payment && Invoice.PaymentGroupCode === PAYGROUP_NONE) {
+        Invoice.Payment = null
+        showPaymentDialog.value = true
+      } else {
+        Invoice.Payment = Payment
+
+        showPaymentDialog.value = false
+        showCheckoutDialog.value = true
+      }
+    }
 
     const IsTest = ref(false)
     const ShowPrintPreview = ref(false)
@@ -263,11 +349,11 @@ export default {
       ShowPrintPreview.value = false
     })
 
-    const checkoutLoading = ref(false)
+    const showSaleDoneDialog = ref(false)
 
-    async function checkout () {
+    async function processCheckout () {
       try {
-        checkoutLoading.value = true
+        Loading.show({ message: 'Processando Checkout' })
 
         const { sale } = await gql({
           query: /* GraphQL */`
@@ -288,74 +374,107 @@ export default {
 
         Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Venta Exitosa' })
 
-        if (sale.Print) {
-          if (sale.Print.Orders) {
-            sale.Print.Orders.forEach(Order => {
-              print({
-                template: 'order',
-                preview: ShowPrintPreview.value,
-                test: sale.Test,
-                printOptions: {
-                  silent: true,
-                  deviceName: Order.Printer,
-                  printBackground: true,
-                  margins: {
-                    marginType: 'none'
-                  }
-                },
-                data: Order
-              })
-            })
-          }
-          if (sale.Print.Invoices) {
-            sale.Print.Invoices.forEach(Invoice => {
-              print({
-                template: 'invoice',
-                preview: ShowPrintPreview.value,
-                test: sale.Test,
-                printOptions: {
-                  silent: true,
-                  deviceName: 'Facturas',
-                  printBackground: true,
-                  margins: {
-                    marginType: 'none'
-                  }
-                },
-                copy: false,
-                data: Invoice
-              })
-              print({
-                template: 'invoice',
-                preview: ShowPrintPreview.value,
-                test: sale.Test,
-                printOptions: {
-                  silent: true,
-                  deviceName: 'Facturas',
-                  printBackground: true,
-                  margins: {
-                    marginType: 'none'
-                  }
-                },
-                copy: true,
-                data: Invoice
-              })
-            })
-          }
-        }
+        handleSalePrint(sale.Print, sale.Test)
+
+        showCheckoutDialog.value = false
+        showSaleDoneDialog.value = true
       } catch (error) {
         gql.handleError(error)
       } finally {
-        checkoutLoading.value = false
+        Loading.hide()
       }
     }
 
+    function handleSalePrint (Print, Test) {
+      if (Print) {
+        if (Print.Orders) {
+          Print.Orders.forEach(Order => {
+            print({
+              template: 'order',
+              preview: ShowPrintPreview.value,
+              test: Test,
+              printOptions: {
+                silent: true,
+                deviceName: Order.Printer,
+                printBackground: true,
+                margins: {
+                  marginType: 'none'
+                }
+              },
+              data: Order
+            })
+          })
+        }
+        if (Print.Invoices) {
+          Print.Invoices.forEach(Invoice => {
+            print({
+              template: 'invoice',
+              preview: ShowPrintPreview.value,
+              test: Test,
+              printOptions: {
+                silent: true,
+                deviceName: 'Facturas',
+                printBackground: true,
+                margins: {
+                  marginType: 'none'
+                }
+              },
+              copy: false,
+              data: Invoice
+            })
+            print({
+              template: 'invoice',
+              preview: ShowPrintPreview.value,
+              test: Test,
+              printOptions: {
+                silent: true,
+                deviceName: 'Facturas',
+                printBackground: true,
+                margins: {
+                  marginType: 'none'
+                }
+              },
+              copy: true,
+              data: Invoice
+            })
+          })
+        }
+      }
+    }
+
+    function resetSale () {
+      CartItems.value = []
+      Invoice.PaymentGroupCode = PAYGROUP_NONE
+      Invoice.Payment = null
+      Invoice.U_NIT = '0'
+      Invoice.U_RAZSOC = 'SIN NOMBRE'
+      Payment.value = {
+        CashEnabled: true,
+        CashBS: 0,
+        CashUSD: 0,
+        CardEnabled: false,
+        CreditSum: 0,
+        CreditCard: null,
+        CreditCardNumber: '',
+        CardValidUntil: '',
+        VoucherNum: ''
+      }
+      loadBusinessPartner('CL000001')
+    }
+
     return {
+      PAYGROUP_NONE,
+      showPaymentDialog,
+      showCheckoutDialog,
+      startCheckout,
+      processCheckout,
       tab,
       split,
       BusinessPartner,
       BusinessPartnerLoading,
       setBusinessPartner,
       formatPrice,
+      itemSubTotal,
       CartItems,
       CartTotal,
       Payment,
@@ -364,9 +483,9 @@ export default {
       PaymentTypeOptions,
       IsTest,
       ShowPrintPreview,
-      canCheckout,
-      checkoutLoading,
-      checkout
+      canStartCheckout,
+      showSaleDoneDialog,
+      resetSale
     }
   }
 }

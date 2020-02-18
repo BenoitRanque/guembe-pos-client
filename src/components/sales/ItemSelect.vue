@@ -38,7 +38,7 @@
                 <div class="tex-body2">
                   {{props.row.ItemName}}
                 </div>
-                <div class="text-caption text-right" v-if="getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum)">
+                <div class="text-caption text-right" v-if="BusinessPartner && getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum)">
                   {{formatPrice(getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum).Price)}}
                 </div>
               </q-card-section>
@@ -92,11 +92,8 @@
                       dark
                       dense
                       outlined
-                      type="number"
-                      min="0"
-                      step="0.01"
                       :value="SelectedItem.Price"
-                      @input="SelectedItem.Price = Number($event)"
+                      @input="SelectedItem.Price = /\d+(.\d\d?)?/.test($event) ? Number($event) : SelectedItem.Price"
                     ></q-input>
                   </q-item-label>
                 </q-item-section>
@@ -107,7 +104,12 @@
             <q-item-section>
               <q-item-label caption>Cantidad</q-item-label>
               <q-item-label>
-                {{SelectedItem.Quantity}}
+                <q-input
+                  :value="SelectedItem.Quantity"
+                  @input="SelectedItem.Quantity = Number.isInteger(Number($event)) && Number($event) >= 1 ? Number($event) : SelectedItem.Quantity"
+                  dense
+                  borderless
+                ></q-input>
               </q-item-label>
             </q-item-section>
             <q-item-section side>
@@ -128,7 +130,7 @@
           </q-item>
         </q-list>
         <q-card-actions align="center">
-          <q-btn @click="done" v-close-popup :disable="SelectedItem.Price === 0" class="q-mx-md q-mb-md" icon="mdi-check" size="lg" color="primary" label="Aggregar"></q-btn>
+          <q-btn @click="done" v-close-popup :disable="SelectedItem.Price === 0" class="q-mx-md q-mb-md" icon="mdi-check" color="primary" label="Aggregar"></q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>

@@ -126,7 +126,9 @@ export default {
     async logout () {
       try {
         await this.$store.dispatch('auth/LOGOUT')
-        this.$router.push('/')
+        if (this.$route.path !== '/') {
+          this.$router.push('/')
+        }
       } catch (error) {
         gql.handleError(error)
       }
