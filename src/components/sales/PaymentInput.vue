@@ -15,7 +15,7 @@
             <q-input
               :disable="!value.CashEnabled"
               :value="value.CashBS"
-              @input="update('CashBS', Number($event))"
+              @input="update('CashBS', /\d+(\.\d\d?)?/.test($event) ? Number($event) : value.CashBS)"
               suffix="BS"
               autofocus
               dense
@@ -31,7 +31,7 @@
             <q-input
               :disable="!value.CashEnabled"
               :value="value.CashUSD"
-              @input="update('CashUSD', Number($event))"
+              @input="update('CashUSD', /\d+(\.\d\d?)?/.test($event) ? Number($event) : value.CashUSD)"
               suffix="US"
               dense
               label="Effectivo Dolares"
@@ -62,7 +62,7 @@
               :disable="!value.CardEnabled"
               :required="!value.CardEnabled"
               :value="value.CreditSum"
-              @input="update('CreditSum', Number($event))"
+              @input="update('CreditSum', /\d+(\.\d\d?)?/.test($event) ? Number($event) : value.CreditSum)"
               dense
               outlined
               suffix="BS"
@@ -216,7 +216,7 @@ export default {
     const cashUSDinBSCents = computed(() => props.value.CashEnabled || !props.value.CashUSD ? 0 : ((props.value.CashUSD.value * 100) * (store.state.config.ExchangeRate * 100)) / 100)
     const cashBSinCents = computed(() => !props.value.CashEnabled ? 0 : props.value.CashBS * 100)
     const cashIncomeCents = computed(() => cashUSDinBSCents.value + cashBSinCents.value)
-    const cashDueCents = computed(() => (props.totalDue * 100) - (props.value.CreditSum * 100))
+    const cashDueCents = computed(() => (props.totalDue * 100) - (props.value.CardEnabled ? props.value.CreditSum * 100 : 0))
     const cashPaid = computed(() => cashIncomeCents.value > cashDueCents.value ? (cashIncomeCents.value - (cashIncomeCents.value - cashDueCents.value)) / 100 : (cashIncomeCents.value / 100))
 
     function submit () {
