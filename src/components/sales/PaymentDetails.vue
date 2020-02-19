@@ -49,7 +49,7 @@ export default {
     const cashBSinCents = computed(() => !props.value.CashEnabled ? 0 : props.value.CashBS * 100)
     const cashTotal = computed(() => cashUSDinBSCents.value || cashBSinCents.value ? ((cashUSDinBSCents.value + cashBSinCents.value) / 100) : 0)
     const cashIncomeCents = computed(() => cashUSDinBSCents.value + cashBSinCents.value)
-    const cashDueCents = computed(() => (props.totalDue * 100) - (props.value.CreditSum * 100))
+    const cashDueCents = computed(() => (props.totalDue * 100) - (props.value.CardEnabled ? props.value.CreditSum * 100 : 0))
     const cashPaid = computed(() => cashIncomeCents.value > cashDueCents.value ? (cashIncomeCents.value - (cashIncomeCents.value - cashDueCents.value)) / 100 : (cashIncomeCents.value / 100))
     const cashChange = computed(() => {
       if (!props.totalDue) return cashTotal.value
