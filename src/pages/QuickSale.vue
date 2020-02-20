@@ -358,7 +358,51 @@ export default {
         const { sale } = await gql({
           query: /* GraphQL */`
             mutation ($Test: Boolean! $Data: QuickSaleInput!) {
-              sale: quick_sale (Test: $Test Data: $Data)
+              sale: quick_sale (Test: $Test Data: $Data) {
+                Test
+                Print {
+                  Orders {
+                    Printer
+                    DocDate
+                    SalesPersonCode
+                    U_GPOS_Serial
+                    U_GPOS_SalesPointCode
+                    Items {
+                      ItemCode
+                      ItemName
+                      Quantity
+                    }
+                  }
+                  Invoices {
+                    DocDate
+                    DocTime
+                    DocTotal
+                    PaymentGroupCode
+                    U_GPOS_Type
+                    U_GPOS_Serial
+                    U_GPOS_SalesPointCode
+                    Items {
+                      ItemCode
+                      ItemName
+                      Quantity
+                      PriceAfterVAT
+                    }
+                    U_FECHALIM
+                    U_EXENTO
+                    U_ACTIVIDAD
+                    U_LEYENDA
+                    U_DIRECCION
+                    U_CIUDAD
+                    U_PAIS
+                    U_SUCURSAL
+                    U_NRO_FAC
+                    U_NROAUTOR
+                    U_CODCTRL
+                    U_NIT
+                    U_RAZSOC
+                  }
+                }
+              }
             }
           `,
           variables: {
