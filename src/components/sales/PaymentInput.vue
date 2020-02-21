@@ -203,7 +203,7 @@ export default {
       const pattern = /(\d\d)(\d\d)(\d\d)(\d\d)/
       if (!pattern.test(date)) return null
       const [ , , year, month ] = date.match(pattern)
-      return `${year}/${month}`
+      return `${month}/${year}`
     }
 
     function fromCardDate (date) {
