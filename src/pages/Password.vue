@@ -10,7 +10,6 @@
           <div class="text-h4">Cambiar contraseña</div>
           <div class="text-body1">Permite al usuario que ya tenga contraseña establecida cambiar la misma. En caso de no tener establecida un contraseña (al ser un usuario nuevo), debera primer restablecer contraseña.</div>
           <employee-select
-            required
             v-model="Credentials.EmployeeID"
             label="Empleado"
           ></employee-select>
