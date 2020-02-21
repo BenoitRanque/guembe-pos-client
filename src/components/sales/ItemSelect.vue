@@ -36,7 +36,7 @@
             >
               <q-card-section>
                 <div class="tex-body2">
-                  {{props.row.ItemName}}
+                  ({{props.row.ItemName}}) {{props.row.ItemName}}
                 </div>
                 <div class="text-caption text-right" v-if="BusinessPartner && getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum)">
                   {{formatPrice(getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum).Price)}}
