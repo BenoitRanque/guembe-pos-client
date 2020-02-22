@@ -47,7 +47,7 @@
         <q-input class="q-ma-md" v-model="Invoice.U_RAZSOC" outlined label="RAZON SOCIAL"></q-input>
         <q-select class="q-ma-md" v-model="Invoice.PaymentGroupCode" outlined emit-value :options="PaymentTypeOptions" map-options></q-select>
         <div class="q-ma-md row items-center no-wrap">
-          <div class="col-auto" v-if="isAuthorized(['administrador'])">
+          <div class="col-auto" v-if="isAuthorized(['cajeros', 'administrador'])">
             <q-checkbox dense v-model="IsTest" label="Prueba"></q-checkbox>
             <br>
             <q-checkbox dense v-model="ShowPrintPreview" :disable="!IsTest" label="Previsualizar"></q-checkbox>
