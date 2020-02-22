@@ -151,7 +151,7 @@ export default {
   props: {
     BusinessPartner: {
       type: Object,
-      default: null
+      default: () => ({ PriceListNum: 1 })
     }
   },
   setup (props, { emit }) {
