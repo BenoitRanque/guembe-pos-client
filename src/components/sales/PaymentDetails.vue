@@ -45,7 +45,7 @@ export default {
     }
   },
   setup (props, ctx) {
-    const cashUSDinBSCents = computed(() => props.value.CashEnabled || !props.value.CashUSD ? 0 : ((props.value.CashUSD.value * 100) * (store.state.config.ExchangeRate * 100)) / 100)
+    const cashUSDinBSCents = computed(() => !props.value.CashEnabled || !props.value.CashUSD ? 0 : ((props.value.CashUSD * 100) * (store.state.config.ExchangeRate * 100)) / 100)
     const cashBSinCents = computed(() => !props.value.CashEnabled ? 0 : props.value.CashBS * 100)
     const cashTotal = computed(() => cashUSDinBSCents.value || cashBSinCents.value ? ((cashUSDinBSCents.value + cashBSinCents.value) / 100) : 0)
     const cashIncomeCents = computed(() => cashUSDinBSCents.value + cashBSinCents.value)

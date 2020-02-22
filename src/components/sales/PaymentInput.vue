@@ -38,8 +38,8 @@
               outlined
               type="number"
               min="0"
-              step="1"
-              pattern="\d+"
+              step="0.01"
+              pattern="\d+(\.\d\d?)?"
             ></q-input>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default {
       return formatDate(endOfDate(new Date(Number(`20${year}`), Number(month) - 1), 'month'), 'YYYYMMDD')
     }
 
-    const cashUSDinBSCents = computed(() => props.value.CashEnabled || !props.value.CashUSD ? 0 : ((props.value.CashUSD.value * 100) * (store.state.config.ExchangeRate * 100)) / 100)
+    const cashUSDinBSCents = computed(() => !props.value.CashEnabled || !props.value.CashUSD ? 0 : ((props.value.CashUSD * 100) * (store.state.config.ExchangeRate * 100)) / 100)
     const cashBSinCents = computed(() => !props.value.CashEnabled ? 0 : props.value.CashBS * 100)
     const cashIncomeCents = computed(() => cashUSDinBSCents.value + cashBSinCents.value)
     const cashDueCents = computed(() => (props.totalDue * 100) - (props.value.CardEnabled ? props.value.CreditSum * 100 : 0))
