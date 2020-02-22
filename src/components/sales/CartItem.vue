@@ -15,7 +15,7 @@
           <q-item>
             <q-item-section>
               <q-item-label caption>Articulo</q-item-label>
-              <q-item-label>{{value.Item.ItemName}}</q-item-label>
+              <q-item-label>{{value.Item.ItemName}} ({{value.Item.ItemCode}})</q-item-label>
             </q-item-section>
           </q-item>
           <q-expansion-item>

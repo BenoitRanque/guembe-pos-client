@@ -44,6 +44,7 @@ export async function loadSalesPointConfig ({ state, commit }) {
             AllowManualPrice
             AllowCredit
             AllowAffiliate
+            Tags
             ItemPrices {
               PriceList
               Price

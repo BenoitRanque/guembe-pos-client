@@ -32,14 +32,18 @@
               @click="selected(props.row)"
               v-close-popup
               v-ripple
-              class="q-ma-xs bg-blue-2 text-weight-bold cursor-pointer"
+              class="q-ma-xs bg-blue-2 cursor-pointer"
             >
               <q-card-section>
-                <div class="tex-body2">
-                  ({{props.row.ItemName}}) {{props.row.ItemName}}
+                <div class="text-body2 text-weight-bold">
+                  {{props.row.ItemName}}
                 </div>
-                <div class="text-caption text-right" v-if="BusinessPartner && getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum)">
-                  {{formatPrice(getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum).Price)}}
+                <div class="text-caption row">
+                  <span>{{props.row.ItemCode}}</span>
+                  <q-space></q-space>
+                  <span v-if="BusinessPartner && getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum)">
+                    {{formatPrice(getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum).Price)}}
+                  </span>
                 </div>
               </q-card-section>
             </q-card>
@@ -58,7 +62,7 @@
           <q-item>
             <q-item-section>
               <q-item-label caption>Articulo</q-item-label>
-              <q-item-label>{{SelectedItem.Item.ItemName}}</q-item-label>
+              <q-item-label>{{SelectedItem.Item.ItemName}} ({{SelectedItem.Item.ItemCode}})</q-item-label>
             </q-item-section>
           </q-item>
           <q-expansion-item>
@@ -156,14 +160,13 @@ export default {
     const table = reactive({
       columns: [
         { name: 'ItemCode', field: 'ItemCode' },
-        { name: 'ItemName', field: 'ItemName' }
+        { name: 'ItemName', field: 'ItemName' },
+        { name: 'Tags', field: Item => Item.Tags.join(' ') }
       ],
       filter: '',
-      filterGroup: '',
-      filterSubGroup: '',
       pagination: {
         page: 1,
-        rowsPerPage: 7
+        rowsPerPage: 20
       },
       loading: false
     })
