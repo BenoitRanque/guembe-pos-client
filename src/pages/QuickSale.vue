@@ -281,7 +281,11 @@ export default {
       if (BusinessPartner) {
         Invoice.U_NIT = BusinessPartner.FederalTaxID
         Invoice.U_RAZSOC = BusinessPartner.CardForeignName
-        Invoice.PaymentGroupCode = BusinessPartner.PayTermsGrpCode
+        if (BusinessPartner.Affiliate) {
+          Invoice.PaymentGroupCode = BusinessPartner.PayTermsGrpCode
+        } else {
+          Invoice.PaymentGroupCode = PAYGROUP_NONE
+        }
       }
     })
 
