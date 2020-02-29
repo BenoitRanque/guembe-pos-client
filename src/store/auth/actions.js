@@ -64,8 +64,13 @@ export async function SCHEDULE_REFRESH ({ commit, dispatch, state }) {
   const task = setTimeout(async () => {
     try {
       await dispatch('REFRESH_TOKEN')
-    } catch (error) {
-      gql.handleError(error)
+    } catch (err1) {
+      gql.handleError(err1)
+      try {
+        await dispatch('REFRESH_TOKEN')
+      } catch (err2) {
+        gql.handleError(err2)
+      }
     }
   }, delay)
 

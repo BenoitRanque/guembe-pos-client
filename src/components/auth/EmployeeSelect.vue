@@ -40,7 +40,7 @@ export default {
         if (Array.isArray(value)) {
           emit('input', value.map(({ value }) => value))
         } else {
-          emit('input', value.value)
+          emit('input', value ? value.value : null)
         }
       }
     })

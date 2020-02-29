@@ -17,7 +17,8 @@ const routes = [
       { path: '', component: () => import('pages/Index.vue') },
       { path: 'settings', component: () => import('pages/Settings.vue') },
       { path: 'password', component: () => import('pages/Password.vue') },
-      { path: 'quicksale', component: () => import('pages/QuickSale.vue') }
+      { path: 'quicksale', component: () => import('pages/QuickSale.vue') },
+      { path: 'report', component: () => import('pages/Report.vue') }
     ]
   }
 ]

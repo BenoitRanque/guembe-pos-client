@@ -96,6 +96,13 @@
             </q-item-label>
           </q-item-section>
         </q-item>
+        <q-item to="/report" v-if="isAuthorized(['administrador', 'cajeros'])">
+          <q-item-section>
+            <q-item-label>
+              Reporte de Ventas
+            </q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 

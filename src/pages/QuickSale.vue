@@ -371,9 +371,9 @@ export default {
                     SalesPersonCode
                     U_GPOS_Serial
                     U_GPOS_SalesPointCode
-                    Items {
+                    DocumentLines {
                       ItemCode
-                      ItemName
+                      ItemDescription
                       Quantity
                     }
                   }
@@ -385,9 +385,9 @@ export default {
                     U_GPOS_Type
                     U_GPOS_Serial
                     U_GPOS_SalesPointCode
-                    Items {
+                    DocumentLines {
                       ItemCode
-                      ItemName
+                      ItemDescription
                       Quantity
                       PriceAfterVAT
                     }

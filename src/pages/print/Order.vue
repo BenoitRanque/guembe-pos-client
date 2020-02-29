@@ -20,9 +20,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, index) in Order.Items" :key="index">
+        <tr v-for="(item, index) in Order.DocumentLines" :key="index">
           <td style="vertical-align: top" class="text-left">{{item.Quantity}}</td>
-          <td style="vertical-align: middle" class="text-left">{{item.ItemName}}</td>
+          <td style="vertical-align: middle" class="text-left">{{item.ItemDescription}}</td>
         </tr>
       </tbody>
     </table>
