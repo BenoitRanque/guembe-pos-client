@@ -1,6 +1,6 @@
 <template>
   <q-card>
-    <q-form>
+    <q-form @submit="login">
       <q-card-section>
         <div class="text-h6 text-center">
           Bienvenido
@@ -15,7 +15,7 @@
       </q-card-section>
       <q-separator></q-separator>
       <q-card-actions align="center">
-        <q-btn flat color="accent" type="submit" icon="mdi-login" label="Iniciar Session" :disable="invalidInput" @click="login"></q-btn>
+        <q-btn flat color="accent" type="submit" icon="mdi-login" label="Iniciar Session" :disable="invalidInput"></q-btn>
       </q-card-actions>
       <q-inner-loading :showing="loading">
         <q-spinner></q-spinner>
