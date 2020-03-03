@@ -157,7 +157,7 @@
 </template>
 
 <script>
-import PaymentDetails from 'components/sales/PaymentDetails'
+import PaymentDetails from 'components/PaymentDetails'
 import store from 'src/store'
 import { formatPrice } from 'src/utils'
 import { computed } from '@vue/composition-api'

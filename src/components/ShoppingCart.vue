@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <th class="text-right" style="width: 10%">Cant.</th>
-        <th class="text-left" style="width: 70%">Desc.</th>
+        <th class="text-left" style="width: 70%">Descripcion</th>
         <th class="text-right" style="width: 10%">Precio</th>
         <th class="text-right" style="width: 10%">Subtotal</th>
       </tr>

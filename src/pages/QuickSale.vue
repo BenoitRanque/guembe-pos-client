@@ -129,8 +129,6 @@
                 :key="index"
                 :value="item"
                 :business-partner="BusinessPartner"
-                @update="CartItems.splice(index, 1, $event)"
-                @remove="CartItems.splice(index, 1)"
               ></cart-item>
             </template>
           </shopping-cart>
@@ -153,12 +151,12 @@
 <script>
 import gql from 'src/gql'
 import print from 'src/print'
-import ClientSelect from 'components/sales/ClientSelect'
-import ItemSelect from 'components/sales/ItemSelect'
-import CartItem from 'components/sales/CartItem'
-import ShoppingCart from 'components/sales/ShoppingCart'
-import PaymentInput from 'components/sales/PaymentInput'
-import PaymentDetails from 'components/sales/PaymentDetails'
+import ClientSelect from 'components/ClientSelect'
+import ItemSelect from 'components/ItemSelect'
+import CartItem from 'components/CartItem'
+import ShoppingCart from 'components/ShoppingCart'
+import PaymentInput from 'components/PaymentInput'
+import PaymentDetails from 'components/PaymentDetails'
 import { ref, computed, reactive, watch } from '@vue/composition-api'
 import { formatPrice, itemSubTotal, getPrimaryPrice } from 'src/utils'
 import { Notify, Loading } from 'quasar'
@@ -439,7 +437,8 @@ export default {
           Print.Orders.forEach(Order => {
             print({
               template: 'order',
-              preview: ShowPrintPreview.value,
+              // preview: ShowPrintPreview.value,
+              preview: true, // temporarily force all to be previews to save paper in testing
               test: Test,
               printOptions: {
                 silent: true,
@@ -457,7 +456,8 @@ export default {
           Print.Invoices.forEach(Invoice => {
             print({
               template: 'invoice',
-              preview: ShowPrintPreview.value,
+              // preview: ShowPrintPreview.value,
+              preview: true, // temporarily force all to be previews to save paper in testing
               test: Test,
               printOptions: {
                 silent: true,
@@ -472,7 +472,8 @@ export default {
             })
             print({
               template: 'invoice',
-              preview: ShowPrintPreview.value,
+              // preview: ShowPrintPreview.value,
+              preview: true, // temporarily force all to be previews to save paper in testing
               test: Test,
               printOptions: {
                 silent: true,

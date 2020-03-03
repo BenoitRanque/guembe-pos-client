@@ -93,7 +93,7 @@
 </template>
 
 <script>
-import EmployeeSelect from 'components/auth/EmployeeSelect'
+import EmployeeSelect from 'components/EmployeeSelect'
 import { reactive, toRefs, ref, watch } from '@vue/composition-api'
 import store from 'src/store'
 import gql from 'src/gql'

@@ -17,7 +17,6 @@
           - {{$store.state.config.SalesPoint.Name}} ({{$store.state.config.SalesPoint.Code}})
           </template>
         </q-toolbar-title>
-
         <template v-if="isAuthenticated">
           <q-btn-dropdown flat>
             <template v-slot:label>
@@ -46,15 +45,6 @@
                 </q-item-section>
               </q-item>
             </q-list>
-          </q-btn-dropdown>
-        </template>
-        <template v-else>
-          <q-btn-dropdown flat>
-            <template v-slot:label>
-              Iniciar Session
-              <q-icon name="mdi-login"></q-icon>
-            </template>
-            <auth-login></auth-login>
           </q-btn-dropdown>
         </template>
       </q-toolbar>
@@ -113,14 +103,10 @@
 </template>
 
 <script>
-import AuthLogin from 'components/auth/Login'
 import { mapGetters } from 'vuex'
 import gql from 'src/gql'
 export default {
   name: 'MyLayout',
-  components: {
-    AuthLogin
-  },
   data () {
     return {
       leftDrawerOpen: false
@@ -133,7 +119,7 @@ export default {
     async logout () {
       try {
         await this.$store.dispatch('auth/LOGOUT')
-        if (this.$route.path !== '/') {
+        if (this.$route.fullPath !== '/') {
           this.$router.push('/')
         }
       } catch (error) {

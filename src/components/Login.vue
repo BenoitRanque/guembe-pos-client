@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import EmployeeSelect from 'components/auth/EmployeeSelect'
+import EmployeeSelect from 'components/EmployeeSelect'
 import { mapActions } from 'vuex'
 export default {
   name: 'Login',

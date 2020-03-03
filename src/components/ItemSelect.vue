@@ -166,7 +166,7 @@ export default {
       filter: '',
       pagination: {
         page: 1,
-        rowsPerPage: 20
+        rowsPerPage: 10
       },
       loading: false
     })

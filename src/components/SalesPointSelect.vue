@@ -3,8 +3,8 @@
     v-bind="$attrs"
     :loading="LoadingOptions"
     :options="Options"
-    v-model="Employee"
-    use-input
+    v-model="SalesPoint"
+    :use-input="!value || Array.isArray(value)"
     input-debounce="0"
     @filter="filterFunction"
   ></q-select>
@@ -14,26 +14,26 @@
 import { computed, ref } from '@vue/composition-api'
 import gql from 'src/gql'
 export default {
-  name: 'EmployeeSelect',
+  name: 'SalesPointSelect',
   props: {
     value: {
-      type: [Number, Array],
+      type: [String, Array],
       default: null
     }
   },
   setup (props, { emit }) {
-    const EmployeeOptions = ref([])
+    const SalesPointOptions = ref([])
 
-    function mapEmployee (EmployeeID) {
-      return EmployeeOptions.value.find(({ value }) => value === EmployeeID) || null
+    function mapSalesPoint (SalesPointCode) {
+      return SalesPointOptions.value.find(({ value }) => value === SalesPointCode) || null
     }
 
-    const Employee = computed({
+    const SalesPoint = computed({
       get () {
         if (Array.isArray(props.value)) {
-          return props.value.map(mapEmployee)
+          return props.value.map(mapSalesPoint)
         } else {
-          return mapEmployee(props.value)
+          return mapSalesPoint(props.value)
         }
       },
       set (value) {
@@ -48,9 +48,9 @@ export default {
     const filter = ref('')
     const Options = computed(() => {
       if (filter.value) {
-        return EmployeeOptions.value.filter(({ label }) => label.toLowerCase().indexOf(filter.value) > -1)
+        return SalesPointOptions.value.filter(({ label }) => label.toLowerCase().indexOf(filter.value) > -1)
       } else {
-        return EmployeeOptions.value
+        return SalesPointOptions.value
       }
     })
 
@@ -69,15 +69,15 @@ export default {
         const { options } = await gql({
           query: /* GraphQL */`
             query {
-              options: session_employees {
-                value: EmployeeID
-                label: SalesEmployeeName
+              options: salespoints {
+                value: Code
+                label: Name
               }
             }
           `
         })
 
-        EmployeeOptions.value = options.sort((a, b) => a.label.localeCompare(b.label))
+        SalesPointOptions.value = options.sort((a, b) => a.label.localeCompare(b.label))
       } catch (error) {
         gql.handleError(error)
       } finally {
@@ -91,7 +91,7 @@ export default {
       LoadingOptions,
       filterFunction,
       Options,
-      Employee
+      SalesPoint
     }
   }
 }

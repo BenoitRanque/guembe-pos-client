@@ -24,7 +24,7 @@ export async function loadSalesPointConfig ({ state, commit }) {
     })
   }
 
-  const { salespoint, pricelists, creditcards } = await gql({
+  const { salespoint, pricelists, creditcards, catalog } = await gql({
     query: /* GraphQL */`
       query ($Code: String!) {
         pricelists {
@@ -38,17 +38,17 @@ export async function loadSalesPointConfig ({ state, commit }) {
         salespoint (Code: $Code) {
           Code
           Name
-          Catalog {
-            ItemCode
-            ItemName
-            AllowManualPrice
-            AllowCredit
-            AllowAffiliate
-            Tags
-            ItemPrices {
-              PriceList
-              Price
-            }
+        }
+        catalog (SalesPointCode: $Code) {
+          ItemCode
+          ItemName
+          AllowManualPrice
+          AllowCredit
+          AllowAffiliate
+          Tags
+          ItemPrices {
+            PriceList
+            Price
           }
         }
       }
@@ -59,7 +59,7 @@ export async function loadSalesPointConfig ({ state, commit }) {
   })
   commit('SALESPOINT', {
     ...salespoint,
-    Catalog: salespoint.Catalog.sort((a, b) => a.ItemName.localeCompare(b.ItemName))
+    Catalog: catalog.sort((a, b) => a.ItemName.localeCompare(b.ItemName))
   })
   commit('PRICELISTS', pricelists)
   commit('CREDITCARDS', creditcards)
