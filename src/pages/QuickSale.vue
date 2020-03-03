@@ -331,14 +331,27 @@ export default {
       return true
     })
 
-    function startCheckout (Payment = null) {
-      if (Payment && Invoice.PaymentGroupCode !== PAYGROUP_NONE) {
+    function startCheckout (IncomingPayment = null) {
+      if (IncomingPayment && Invoice.PaymentGroupCode !== PAYGROUP_NONE) {
         throw new Error(`Inconsistent state. Should not happen. Payment present when not required`)
-      } else if (!Payment && Invoice.PaymentGroupCode === PAYGROUP_NONE) {
+      } else if (!IncomingPayment && Invoice.PaymentGroupCode === PAYGROUP_NONE) {
         Invoice.Payment = null
+
+        Payment.value = {
+          CashEnabled: true,
+          CashBS: CartTotal.value,
+          CashUSD: 0,
+          CardEnabled: false,
+          CreditSum: 0,
+          CreditCard: null,
+          CreditCardNumber: '',
+          CardValidUntil: '',
+          VoucherNum: ''
+        }
+
         showPaymentDialog.value = true
       } else {
-        Invoice.Payment = Payment
+        Invoice.Payment = IncomingPayment
 
         showPaymentDialog.value = false
         showCheckoutDialog.value = true
@@ -437,8 +450,7 @@ export default {
           Print.Orders.forEach(Order => {
             print({
               template: 'order',
-              // preview: ShowPrintPreview.value,
-              preview: true, // temporarily force all to be previews to save paper in testing
+              preview: ShowPrintPreview.value,
               test: Test,
               printOptions: {
                 silent: true,
@@ -456,8 +468,7 @@ export default {
           Print.Invoices.forEach(Invoice => {
             print({
               template: 'invoice',
-              // preview: ShowPrintPreview.value,
-              preview: true, // temporarily force all to be previews to save paper in testing
+              preview: ShowPrintPreview.value,
               test: Test,
               printOptions: {
                 silent: true,
@@ -472,8 +483,7 @@ export default {
             })
             print({
               template: 'invoice',
-              // preview: ShowPrintPreview.value,
-              preview: true, // temporarily force all to be previews to save paper in testing
+              preview: ShowPrintPreview.value,
               test: Test,
               printOptions: {
                 silent: true,

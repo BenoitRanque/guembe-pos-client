@@ -45,9 +45,7 @@ export default {
       return job.value && job.value.printers ? job.value.printers.map(({ name }) => name) : []
     })
 
-    // currenty in staging, all printing should be treated as test
-    const test = computed(() => true)
-    // const test = computed(() => job.value && job.value.test)
+    const test = computed(() => job.value && job.value.test)
 
     return {
       job,

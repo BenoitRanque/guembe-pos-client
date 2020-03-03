@@ -16,6 +16,7 @@
           :loading="loading"
           :filter="filter"
           @request="onRequest"
+          @rowclick="(evt, row) => selected(row)"
         >
           <template v-slot:top-left>
             <q-input autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
@@ -23,11 +24,6 @@
                 <q-icon name="mdi-magnify" />
               </template>
             </q-input>
-          </template>
-          <template v-slot:body-cell-action="props">
-            <q-td :props="props">
-              <q-btn size="sm" unelevated dense color="primary" v-close-popup @click="selected(props.row)">Selecionar</q-btn>
-            </q-td>
           </template>
         </q-table>
       </q-card>

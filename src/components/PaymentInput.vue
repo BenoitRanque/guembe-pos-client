@@ -3,7 +3,11 @@
     <q-expansion-item v-model="value.CashEnabled">
       <template v-slot:header>
         <q-item-section>
-          <q-checkbox class="text-bold" v-model="value.CashEnabled">
+          <q-checkbox
+            class="text-bold"
+            :value="value.CashEnabled"
+            @input="update('CashEnabled', $event)"
+          >
             Effectivo
             <q-icon name="mdi-cash-multiple"></q-icon>
           </q-checkbox>
@@ -15,7 +19,7 @@
             <q-input
               :disable="!value.CashEnabled"
               :value="value.CashBS"
-              @input="update('CashBS', /\d+(\.\d\d?)?/.test($event) ? Number($event) : value.CashBS)"
+              @input="update('CashBS', /\d+(\.\d\d?)?/.test($event) ? Number($event) : $event ? value.CashBS : 0)"
               suffix="BS"
               autofocus
               dense
@@ -31,7 +35,7 @@
             <q-input
               :disable="!value.CashEnabled"
               :value="value.CashUSD"
-              @input="update('CashUSD', /\d+(\.\d\d?)?/.test($event) ? Number($event) : value.CashUSD)"
+              @input="update('CashUSD', /\d+(\.\d\d?)?/.test($event) ? Number($event) : $event ? value.CashUSD : 0)"
               suffix="US"
               dense
               label="Effectivo Dolares"
@@ -48,7 +52,11 @@
     <q-expansion-item v-model="value.CardEnabled">
       <template v-slot:header>
         <q-item-section>
-          <q-checkbox class="text-bold" v-model="value.CardEnabled">
+          <q-checkbox
+            class="text-bold"
+            :value="value.CardEnabled"
+            @input="update('CardEnabled', $event)"
+          >
             Tarjeta
             <q-icon name="mdi-credit-card-outline"></q-icon>
           </q-checkbox>
@@ -62,7 +70,7 @@
               :disable="!value.CardEnabled"
               :required="!value.CardEnabled"
               :value="value.CreditSum"
-              @input="update('CreditSum', /\d+(\.\d\d?)?/.test($event) ? Number($event) : value.CreditSum)"
+              @input="update('CreditSum', /\d+(\.\d\d?)?/.test($event) ? Number($event) : $event ? value.CreditSum : 0)"
               dense
               outlined
               suffix="BS"
@@ -219,8 +227,10 @@ export default {
     const cashDueCents = computed(() => (props.totalDue * 100) - (props.value.CardEnabled ? props.value.CreditSum * 100 : 0))
     const cashPaid = computed(() => cashIncomeCents.value > cashDueCents.value ? (cashIncomeCents.value - (cashIncomeCents.value - cashDueCents.value)) / 100 : (cashIncomeCents.value / 100))
 
+    const dueCovered = computed(() => ((cashPaid.value * 100) + (props.value.CardEnabled ? props.value.CreditSum * 100 : 0)) / 100 >= props.totalDue)
+
     function submit () {
-      if (((cashPaid.value * 100) + (props.value.CreditSum * 100) / 100) < props.totalDue) {
+      if (!dueCovered.value) {
         return Notify.create({
           color: 'negative',
           icon: 'mdi-alert',

@@ -143,7 +143,7 @@ const columns = [
     align: 'left',
     label: 'Factura Anulada',
     field: 'Cancelled',
-    format: value => value === 'Y' ? 'Si' : 'No'
+    format: value => value === 'tYES' ? 'Si' : 'No'
   },
   {
     name: 'PaymentGroupCode',
