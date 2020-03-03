@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <div class="text-h4">Configuracion</div>
-    <q-input label="Codigo de punto de venta" v-model="SalesPointCode"></q-input>
+    <sales-point-select label="Punto de Venta" v-model="SalesPointCode"></sales-point-select>
     <div class="row q-my-md">
       <q-btn @click="saveConfig" icon="mdi-content-save">Actualizar Configuracion</q-btn>
       <q-space/>
@@ -11,12 +11,14 @@
 </template>
 
 <script>
+import SalesPointSelect from 'components/SalesPointSelect'
 import store from 'src/store'
 import gql from 'src/gql'
 import { computed } from '@vue/composition-api'
 import { Loading } from 'quasar'
 export default {
   name: 'Settings',
+  components: { SalesPointSelect },
   setup () {
     const SalesPointCode = computed({
       get () {
