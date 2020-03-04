@@ -16,7 +16,7 @@
           :loading="loading"
           :filter="filter"
           @request="onRequest"
-          @rowclick="(evt, row) => selected(row)"
+          @row-click="(evt, row) => selected(row)"
         >
           <template v-slot:top-left>
             <q-input autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
@@ -137,6 +137,7 @@ export default {
     function selected (BusinessPartner) {
       emit('selected', BusinessPartner)
       table.filter = ''
+      showDialog.value = false
     }
 
     return {
