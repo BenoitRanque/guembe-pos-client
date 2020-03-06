@@ -4,13 +4,13 @@
       <q-item-section>Total a cobrar</q-item-section>
       <q-item-section side>{{formatPrice(totalDue)}}</q-item-section>
     </q-item>
-    <q-item>
-      <q-item-section>Saldo Pendiente</q-item-section>
-      <q-item-section side>{{formatPrice(totalPending)}}</q-item-section>
-    </q-item>
     <q-item v-if="totalCredit">
       <q-item-section>Credito</q-item-section>
       <q-item-section side>{{formatPrice(totalCredit)}}</q-item-section>
+    </q-item>
+    <q-item>
+      <q-item-section>Saldo Pendiente</q-item-section>
+      <q-item-section side>{{formatPrice(totalPending)}}</q-item-section>
     </q-item>
     <q-item v-if="value.CardEnabled">
       <q-item-section>Tarjeta</q-item-section>
@@ -62,9 +62,10 @@ export default {
     })
     const totalPending = computed(() => {
       const totalDueCents = props.totalDue * 100
+      const totalCreditCents = props.totalCredit ? props.totalCredit * 100 : 0
 
       const cardCents = props.value.CardEnabled ? props.value.CreditSum * 100 : 0
-      const pendingCents = totalDueCents - (cardCents + cashIncomeCents.value)
+      const pendingCents = totalDueCents - (cardCents + cashIncomeCents.value + totalCreditCents)
 
       return pendingCents > 0 ? pendingCents / 100 : 0
     })
