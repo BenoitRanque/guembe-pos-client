@@ -57,7 +57,6 @@
       content-class="bg-grey-2"
     >
       <q-list>
-        <q-item-label header>Essential Links</q-item-label>
         <q-item to="/" exact>
           <q-item-section>
             <q-item-label>
