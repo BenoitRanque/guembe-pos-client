@@ -56,7 +56,12 @@ module.exports = function (ctx) {
         'Dialog',
         'Loading',
         'LocalStorage'
-      ]
+      ],
+      config: {
+        notify: {
+          timeout: 20000
+        }
+      }
     },
 
     // https://quasar.dev/quasar-cli/cli-documentation/supporting-ie
