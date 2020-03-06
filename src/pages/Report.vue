@@ -111,7 +111,7 @@ import store from 'src/store'
 import { date, Notify } from 'quasar'
 import print from 'src/print'
 
-const { formatDate, subtractFromDate, startOfDate } = date
+const { formatDate, startOfDate } = date
 
 const columns = [
   {
@@ -204,10 +204,9 @@ export default {
     const isAdmin = store.getters['auth/isAuthorized']('administrador')
 
     const today = startOfDate(new Date(), 'day')
-    const yesterday = subtractFromDate(today, { days: 1 })
 
-    const FromDate = ref(formatDate(isAdmin ? today : yesterday, 'YYYY/MM/DD'))
-    const ToDate = ref(formatDate(isAdmin ? today : yesterday, 'YYYY/MM/DD'))
+    const FromDate = ref(formatDate(today, 'YYYY/MM/DD'))
+    const ToDate = ref(formatDate(today, 'YYYY/MM/DD'))
 
     function validDate (date) {
       return /\d{4}\/\d{2}\/[0-1]\d/.test(date)
@@ -229,8 +228,8 @@ export default {
 
         const { invoices: { count, items } } = await gql({
           query: /* GraphQL */`
-            query ($FromDate: Date! $ToDate: Date! $SalesPersonCode: Int $SalesPointCode: String) {
-              invoices (FromDate: $FromDate ToDate: $ToDate SalesPersonCode: $SalesPersonCode SalesPointCode: $SalesPointCode) {
+            query ($FromDate: Date! $ToDate: Date! $SalesPersonCode: Int $SalesPointCode: String $limit: Int $offset: Int) {
+              invoices (FromDate: $FromDate ToDate: $ToDate SalesPersonCode: $SalesPersonCode SalesPointCode: $SalesPointCode limit: $limit offset: $offset) {
                 count
                 items {
                   DocEntry
@@ -276,7 +275,9 @@ export default {
             SalesPersonCode: SalesPersonCode.value,
             SalesPointCode: SalesPointCode.value,
             FromDate: FromDate.value.replace(/\//g, ''),
-            ToDate: ToDate.value.replace(/\//g, '')
+            ToDate: ToDate.value.replace(/\//g, ''),
+            limit: pagination.rowsPerPage,
+            offset: pagination.rowsPerPage * (pagination.page - 1)
           }
         })
 
