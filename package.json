@@ -1,6 +1,6 @@
 {
   "name": "guembe-pos-client",
-  "version": "0.0.1",
+  "version": "1.1.0",
   "description": "Guembe POS",
   "productName": "Guembe POS",
   "cordovaId": "org.cordova.quasar.app",
@@ -15,7 +15,6 @@
     "@quasar/extras": "^1.5.2",
     "@vue/composition-api": "^0.3.4",
     "axios": "^0.18.1",
-    "number2words": "https://github.com/gpincheiraa/number2words",
     "qrcode.vue": "^1.7.0",
     "quasar": "^1.9.7"
   },

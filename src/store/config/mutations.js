@@ -7,9 +7,3 @@ export function EXCHANGERATE (state, ExchangeRate) {
 export function SALESPOINT (state, SalesPoint) {
   state.SalesPoint = SalesPoint
 }
-export function PRICELISTS (state, PriceLists) {
-  state.PriceLists = PriceLists
-}
-export function CREDITCARDS (state, CreditCards) {
-  state.CreditCards = CreditCards
-}

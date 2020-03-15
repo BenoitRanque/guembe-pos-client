@@ -31,7 +31,7 @@ function createWindow () {
     })
 
     mainWindow.once('ready-to-show', (event) => {
-      event.sender.webContents.send('READY_MAIN_WINDOW')
+      // event.sender.webContents.send('READY_MAIN_WINDOW')
       mainWindow.show()
     })
 

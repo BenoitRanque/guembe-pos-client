@@ -2,6 +2,12 @@
   <q-page>
     <q-splitter style="height: calc(100vh - 50px)" v-model="split">
       <template v-slot:before>
+        <q-banner v-if="!SalesPointCode" class="bg-negative text-white q-ma-md rounded-borders">
+          Para realizar venta primero configure el punto de venta
+          <template v-slot:action v-if="isAuthorized('administrador')">
+            <q-btn flat @click="$router.push('/settings')">Ir a configuracion</q-btn>
+          </template>
+        </q-banner>
         <shopping-cart v-model="CartItems">
           <template v-slot:item="{ item, index }">
             <cart-item
@@ -15,7 +21,14 @@
           </template>
         </shopping-cart>
         <div class="text-center">
-          <item-select :business-partner="BusinessPartner" @selected="itemSelected" size="lg" icon="mdi-plus" color="primary">
+          <item-select
+            v-if="SalesPointCode && BusinessPartner"
+            :business-partner="BusinessPartner"
+            :sales-point-code="SalesPointCode"
+            @selected="itemSelected" size="lg"
+            icon="mdi-plus"
+            color="accent"
+          >
             Aggregar Articulo
           </item-select>
         </div>
@@ -47,19 +60,15 @@
         <q-input class="q-ma-md" v-model="Invoice.U_RAZSOC" outlined label="RAZON SOCIAL"></q-input>
         <q-select class="q-ma-md" v-model="Invoice.PaymentGroupCode" outlined emit-value :options="PaymentTypeOptions" map-options></q-select>
         <div class="q-ma-md row items-center no-wrap">
-          <div class="col-auto" v-if="isAuthorized(['cajeros', 'administrador'])">
-            <q-checkbox dense v-model="IsTest" label="Prueba"></q-checkbox>
-            <br>
-            <q-checkbox dense v-model="ShowPrintPreview" :disable="!IsTest" label="Previsualizar"></q-checkbox>
-          </div>
           <q-space></q-space>
+          <q-checkbox dense class="q-mx-sm" v-model="IsTest" label="Prueba" left-label></q-checkbox>
           <q-btn
             @click="() => startCheckout()"
             :disable="!canStartCheckout"
             icon="mdi-cash-register"
             size="lg"
             label="Checkout"
-            color="primary"
+            color="accent"
           ></q-btn>
         </div>
       </template>
@@ -158,7 +167,7 @@ import ShoppingCart from 'components/ShoppingCart'
 import PaymentInput from 'components/PaymentInput'
 import PaymentDetails from 'components/PaymentDetails'
 import { ref, computed, reactive, watch } from '@vue/composition-api'
-import { formatPrice, itemSubTotal, getPrimaryPrice } from 'src/utils'
+import { formatPrice, itemSubTotal } from 'src/utils'
 import { Notify, Loading } from 'quasar'
 import store from 'src/store'
 import { mapGetters } from 'vuex'
@@ -180,27 +189,97 @@ export default {
 
     const BusinessPartner = ref(null)
 
+    const SalesPointCode = computed(() => store.state.config.SalesPointCode)
+
     const CartItems = ref([])
     const CartTotal = computed(() => CartItems.value.reduce((total, { Quantity, Price }) => total + ((Price * 100) * Quantity), 0) / 100)
 
-    async function setBusinessPartner (BP) {
-      for (let CartItem of CartItems.value) {
-        let ItemPrice = getPrimaryPrice(CartItem.Item.ItemPrices, BP.PriceListNum)
+    async function setBusinessPartner (NewBusinessPartner) {
+      if (CartItems.value.length && NewBusinessPartner.PrimaryPriceList !== BusinessPartner.value.PrimaryPriceList) {
+        const ItemCodes = CartItems.value.map(({ Item }) => Item.ItemCode)
 
-        if (!ItemPrice) {
-          if (!CartItem.Item.AllowManualPrice) {
-            return Notify.create({
-              color: 'negative',
-              icon: 'mdi-alert',
-              message: `Cliente '${BP.CardName}' (${BP.CardCode}) no tiene precio para articulo '${CartItem.Item.ItemName}' (${CartItem.Item.ItemCode}). Escoja otro cliente o quite el articulo`
-            })
+        const queryParams = ItemCodes.map((code, index) => `$_${index}: String!`).join(' ')
+
+        const queryBody = ItemCodes.map((code, index) => /* GraphQL */`
+          _${index}: item (Code: $_${index} CodeType: ItemCode PrimaryPriceList: $PrimaryPriceList SecondaryPriceList: $SecondaryPriceList SalesPointCode: $SalesPointCode) {
+            ItemCode
+            ItemName
+            AllowCredit
+            AllowAffiliate
+            AllowManualPrice
+            PrimaryPrice
+            SecondaryPrice
+            Stock
           }
-        } else {
-          CartItem.Price = ItemPrice.Price
+        `).join('\n')
+
+        const variables = ItemCodes.reduce((variables, value, index) => {
+          variables[`_${index}`] = value
+          return variables
+        }, {
+          PrimaryPriceList: NewBusinessPartner.PrimaryPriceList,
+          SecondaryPriceList: NewBusinessPartner.SecondaryPriceList,
+          SalesPointCode: SalesPointCode.value
+        })
+
+        const query = /* GraphQL */`
+          query ($PrimaryPriceList: Int! $SecondaryPriceList: Int! $SalesPointCode: String! ${queryParams}) {
+            ${queryBody}
+          }
+        `
+        let items = null
+        try {
+          BusinessPartnerLoading.value = true
+          items = await gql({ query, variables })
+        } catch (error) {
+          gql.handleError(error)
+        } finally {
+          BusinessPartnerLoading.value = false
+        }
+
+        for (const key in items) {
+          const item = items[key]
+
+          if (!item.PrimaryPrice) {
+            if (BusinessPartner.Affiliate || !item.SecondaryPrice) {
+              if (!item.AllowManualPrice) {
+                return Notify.create({
+                  type: 'negative',
+                  message: `Cliente '${NewBusinessPartner.CardName}' (${NewBusinessPartner.CardCode}) no tiene precio para articulo '${item.ItemName}' (${item.ItemCode}). Escoja otro cliente o quite el articulo`
+                })
+              }
+            }
+          }
+        }
+
+        for (const key in items) {
+          const index = Number(key.slice(1))
+          const Item = items[key]
+          const Quantity = CartItems.value[index].Quantity
+
+          // primary price if not zero
+          // else secondary price if not zero
+          // else previous price if manual price allowed
+          // else error
+          let Price = null
+
+          if (Item.PrimaryPrice) {
+            Price = Item.PrimaryPrice
+          } else if (Item.SecondaryPrice && !BusinessPartner.Affiliate) {
+            Price = Item.SecondaryPrice
+          } else if (Item.AllowManualPrice) {
+            Price = CartItems.value[index].Price
+          }
+
+          CartItems.value.splice(index, 1, {
+            Item,
+            Quantity,
+            Price
+          })
         }
       }
 
-      BusinessPartner.value = BP
+      BusinessPartner.value = NewBusinessPartner
     }
 
     function itemSelected (Item) {
@@ -243,7 +322,7 @@ export default {
         const { client } = await gql({
           query: /* GraphQL */`
             query ($CardCode: String!) {
-              client: business_partner (CardCode: $CardCode) {
+              client: business_partner (Code: $CardCode CodeType: CardCode) {
                 CardCode
                 CardName
                 CardForeignName
@@ -251,11 +330,10 @@ export default {
                 PayTermsGrpCode
                 Affiliate
                 VatLiable
-                PriceListNum
-                PriceList {
-                  PriceListNo
-                  PriceListName
-                }
+                PrimaryPriceList
+                PrimaryPriceListName
+                SecondaryPriceList
+                SecondaryPriceListName
               } 
             }
           `,
@@ -301,29 +379,30 @@ export default {
       CardValidUntil: '',
       VoucherNum: ''
     })
-
-    watch(() => Invoice.PaymentGroupCode, PaymentGroupCode => {
-      if (PaymentGroupCode === PAYGROUP_NONE) {
-        Payment.value.CashEnabled = true
-        Payment.value.CashBS = CartTotal.value
-        Payment.value.CashUSD = 0
-        Payment.value.CardEnabled = false
-        Payment.value.CreditSum = 0
-        Payment.value.CreditCard = null
-        Payment.value.CreditCardNumber = ''
-        Payment.value.CardValidUntil = ''
-        Payment.value.VoucherNum = ''
-      } else {
-        Payment.value.CashEnabled = false
-        Payment.value.CashBS = 0
-        Payment.value.CashUSD = 0
-        Payment.value.CardEnabled = false
-        Payment.value.CreditSum = 0
-        Payment.value.CreditCard = null
-        Payment.value.CreditCardNumber = ''
-        Payment.value.CardValidUntil = ''
-        Payment.value.VoucherNum = ''
+    watch(() => Payment.value.CashEnabled, Enabled => {
+      if (!Payment.value.CardEnabled) {
+        Payment.value.CashBS = Enabled ? CartTotal.value : 0
+        if (!Enabled) {
+          Payment.value.CashUSD = 0
+        }
       }
+    })
+
+    watch(() => Payment.value.CardEnabled, Enabled => {
+      if (!Payment.value.CashEnabled) {
+        Payment.value.CreditSum = Enabled ? CartTotal.value : 0
+      }
+    })
+    watch(() => Invoice.PaymentGroupCode, PaymentGroupCode => {
+      Payment.value.CashEnabled = false
+      Payment.value.CashBS = 0
+      Payment.value.CashUSD = 0
+      Payment.value.CardEnabled = false
+      Payment.value.CreditSum = 0
+      Payment.value.CreditCard = null
+      Payment.value.CreditCardNumber = ''
+      Payment.value.CardValidUntil = ''
+      Payment.value.VoucherNum = ''
     })
 
     const canStartCheckout = computed(() => {
@@ -338,8 +417,8 @@ export default {
         Invoice.Payment = null
 
         Payment.value = {
-          CashEnabled: true,
-          CashBS: CartTotal.value,
+          CashEnabled: false,
+          CashBS: 0,
           CashUSD: 0,
           CardEnabled: false,
           CreditSum: 0,
@@ -359,10 +438,6 @@ export default {
     }
 
     const IsTest = ref(false)
-    const ShowPrintPreview = ref(false)
-    watch(IsTest, () => {
-      ShowPrintPreview.value = false
-    })
 
     const showSaleDoneDialog = ref(false)
 
@@ -402,14 +477,16 @@ export default {
                       Quantity
                       PriceAfterVAT
                     }
+                    TaxSerie {
+                      U_ACTIVIDAD
+                      U_LEYENDA
+                      U_DIRECCION
+                      U_CIUDAD
+                      U_PAIS
+                      U_SUCURSAL                      
+                    }
                     U_FECHALIM
                     U_EXENTO
-                    U_ACTIVIDAD
-                    U_LEYENDA
-                    U_DIRECCION
-                    U_CIUDAD
-                    U_PAIS
-                    U_SUCURSAL
                     U_NRO_FAC
                     U_NROAUTOR
                     U_CODCTRL
@@ -450,7 +527,7 @@ export default {
           Print.Orders.forEach(Order => {
             print({
               template: 'order',
-              preview: ShowPrintPreview.value,
+              preview: Test,
               test: Test,
               printOptions: {
                 silent: true,
@@ -468,7 +545,7 @@ export default {
           Print.Invoices.forEach(Invoice => {
             print({
               template: 'invoice',
-              preview: ShowPrintPreview.value,
+              preview: Test,
               test: Test,
               printOptions: {
                 silent: true,
@@ -483,7 +560,7 @@ export default {
             })
             print({
               template: 'invoice',
-              preview: ShowPrintPreview.value,
+              preview: Test,
               test: Test,
               printOptions: {
                 silent: true,
@@ -521,8 +598,19 @@ export default {
       loadBusinessPartner('CL000001')
     }
 
+    if (!store.state.config.SalesPointCode) {
+      Notify.create({
+        type: 'warning',
+        message: 'Para buen uso del POS debe configurar el punto de venta'
+      })
+    } else {
+      store.dispatch('config/loadLocalConfig')
+      store.dispatch('config/loadSalesPointConfig')
+    }
+
     return {
       PAYGROUP_NONE,
+      SalesPointCode,
       showPaymentDialog,
       showCheckoutDialog,
       startCheckout,
@@ -541,7 +629,6 @@ export default {
       itemSelected,
       PaymentTypeOptions,
       IsTest,
-      ShowPrintPreview,
       canStartCheckout,
       showSaleDoneDialog,
       resetSale

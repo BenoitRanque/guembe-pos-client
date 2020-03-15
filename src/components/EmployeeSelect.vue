@@ -16,7 +16,11 @@ import gql from 'src/gql'
 export default {
   name: 'EmployeeSelect',
   props: {
-    SalesPerson: {
+    ShowUnset: {
+      type: Boolean,
+      default: false
+    },
+    UseSalesPersonCode: {
       type: Boolean,
       default: false
     },
@@ -70,16 +74,29 @@ export default {
       try {
         LoadingOptions.value = true
 
-        const { options } = await gql({
+        const { employees } = await gql({
           query: /* GraphQL */`
-            query {
-              options: session_employees {
-                value: ${props.SalesPerson ? 'SalesEmployeeCode' : 'EmployeeID'}
-                label: SalesEmployeeName
+            query ($showUnset: Boolean!) {
+              employees (showUnset: $showUnset) { 
+                pageItems {
+                  EmployeeID
+                  SalesPerson {
+                    SalesPersonName
+                    SalesPersonCode
+                  }
+                }
               }
             }
-          `
+          `,
+          variables: {
+            showUnset: !!props.ShowUnset
+          }
         })
+
+        const options = employees.pageItems.map(({ EmployeeID, SalesPerson }) => ({
+          label: SalesPerson.SalesPersonName,
+          value: props.UseSalesPersonCode ? SalesPerson.SalesPersonCode : EmployeeID
+        }))
 
         EmployeeOptions.value = options.sort((a, b) => a.label.localeCompare(b.label))
       } catch (error) {

@@ -3,10 +3,10 @@
     <template v-if="InvoiceType === 201">
       <div class="text-center text-weight-bold">BIOCENTRO GUEMBE S.A.</div>
       <div class="text-center">MARIPOSARIO ORQUIDEARIO Y TURISMO DE SALUD</div>
-      <div class="text-center">{{Invoice.U_SUCURSAL}}</div>
-      <div class="text-center">{{Invoice.U_DIRECCION}}</div>
+      <div class="text-center">{{Invoice.TaxSerie.U_SUCURSAL}}</div>
+      <div class="text-center">{{Invoice.TaxSerie.U_DIRECCION}}</div>
       <div class="text-center">Tel: 3700700</div>
-      <div class="text-center">{{Invoice.U_CIUDAD}} - {{Invoice.U_PAIS}}</div>
+      <div class="text-center">{{Invoice.TaxSerie.U_CIUDAD}} - {{Invoice.TaxSerie.U_PAIS}}</div>
       <q-separator />
       <div class="text-center text-weight-bold">FACTURA</div>
       <div class="text-center" v-if="Copy">Copia: Contabilidad</div>
@@ -16,7 +16,7 @@
       <div class="row"><span class="text-weight-bold">Nro. Factura:</span><q-space/><span>{{Invoice.U_NRO_FAC}}</span></div>
       <div class="row"><span class="text-weight-bold">Nro. Autorización:</span><q-space/><span>{{Invoice.U_NROAUTOR}}</span></div>
       <q-separator />
-      <div class="text-center">{{Invoice.U_ACTIVIDAD}}</div>
+      <div class="text-center">{{Invoice.TaxSerie.U_ACTIVIDAD}}</div>
       <q-separator />
       <div class="row"><span class="text-weight-bold">Fecha:</span><q-space/><span>{{displayDate(Invoice.DocDate)}}</span></div>
       <div class="row"><span class="text-weight-bold">NIT/CI:</span><q-space/><span>{{Invoice.U_NIT}}</span></div>
@@ -79,7 +79,7 @@
         <qr-code style="font-size: 0" :value="QRCode" :size="100" level="M"></qr-code>
       </div>
       <div class="text-weight-bold">“ESTE  DOCUMENTO  FISCAL CONTRIBUYE AL DESARROLLO DE NUESTRO PAÍS, EL USO ILÍCITO ES SANCIONADO PENALMENTE”</div>
-      <div>{{Invoice.U_LEYENDA}}</div>
+      <div>{{Invoice.TaxSerie.U_LEYENDA}}</div>
     </template>
     <q-separator />
     <div class="row"><span class="text-weight-bold">Condicion de pago:</span><q-space/><span>{{Invoice.PaymentGroupCode === -1 ? 'Contado' : 'Credito'}}</span></div>

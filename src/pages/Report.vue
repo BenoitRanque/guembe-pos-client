@@ -4,6 +4,7 @@
       flat
       :data="data"
       :columns="columns"
+      :filter="filter"
       row-key="DocEntry"
       :pagination.sync="pagination"
       :loading="loading"
@@ -11,6 +12,16 @@
       @row-click="handleRowClick"
     >
       <template v-slot:top>
+        <q-input autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
+          <template v-slot:prepend>
+            <q-icon name="mdi-magnify" />
+          </template>
+        </q-input>
+        <q-space></q-space>
+        <employee-select :readonly="!isAuthorized('administrador')" label="Vendedor" clearable dense outlined v-model="SalesPersonCode" use-sales-person-code></employee-select>
+        <div class="q-mx-xs"></div>
+        <sales-point-select :readonly="!isAuthorized('administrador')" label="Punto de Venta" clearable dense outlined v-model="SalesPointCode"></sales-point-select>
+        <div class="q-mx-xs"></div>
         <q-input label="Fecha Desde" hide-bottom-space dense outlined v-model="FromDate" mask="date" :error="!validDate(FromDate)">
           <template v-slot:append>
             <q-icon name="mdi-calendar" class="cursor-pointer">
@@ -30,10 +41,6 @@
             </q-icon>
           </template>
         </q-input>
-        <q-space></q-space>
-        <sales-point-select :readonly="!isAuthorized('administrador')" label="Punto de Venta" clearable dense outlined v-model="SalesPointCode"></sales-point-select>
-        <div class="q-mx-xs"></div>
-        <employee-select :readonly="!isAuthorized('administrador')" label="Vendedor" clearable dense outlined v-model="SalesPersonCode" sales-person></employee-select>
       </template>
     </q-table>
     <q-dialog v-model="showInvoice">
@@ -95,6 +102,10 @@
             </tfoot>
           </q-markup-table>
         </template>
+        <q-separator></q-separator>
+        <q-card-actions align="center">
+          <q-btn flat v-close-popup>Cerrar</q-btn>
+        </q-card-actions>
       </q-card>
     </q-dialog>
   </q-page>
@@ -143,7 +154,7 @@ const columns = [
     align: 'left',
     label: 'Factura Anulada',
     field: 'Cancelled',
-    format: value => value === 'tYES' ? 'Si' : 'No'
+    format: value => value ? 'Si' : 'No'
   },
   {
     name: 'PaymentGroupCode',
@@ -169,7 +180,7 @@ const columns = [
     name: 'SalesPerson',
     align: 'left',
     label: 'Vendedor',
-    field: row => row.SalesPerson.SalesEmployeeName
+    field: row => row.SalesPerson.SalesPersonName
   },
   {
     name: 'SalesPoint',
@@ -192,6 +203,7 @@ export default {
   setup () {
     const table = reactive({
       columns,
+      filter: '',
       pagination: {
         page: 1,
         rowsPerPage: 10,
@@ -212,7 +224,7 @@ export default {
       return /\d{4}\/\d{2}\/[0-1]\d/.test(date)
     }
 
-    const SalesPersonCode = ref(isAdmin ? null : store.state.auth.session.SalesEmployeeCode)
+    const SalesPersonCode = ref(isAdmin ? null : store.state.auth.Employee.SalesPersonCode)
     const SalesPointCode = ref(isAdmin ? null : store.state.config.SalesPointCode)
 
     async function onRequest ({ pagination, filter }) {
@@ -220,18 +232,18 @@ export default {
       if (!validDate(FromDate.value) || !validDate(ToDate.value)) return
 
       if (FromDate.value > ToDate.value) {
-        return Notify.create({ icon: 'mdi-alert', color: 'negative', message: 'Fecha Desde debe ser menor o igual a Fecha Hasta' })
+        return Notify.create({ tyep: 'warning', message: 'Fecha Desde debe ser menor o igual a Fecha Hasta' })
       }
 
       try {
         table.loading = true
 
-        const { invoices: { count, items } } = await gql({
+        const { invoices: { totalItems, pageItems } } = await gql({
           query: /* GraphQL */`
-            query ($FromDate: Date! $ToDate: Date! $SalesPersonCode: Int $SalesPointCode: String $limit: Int $offset: Int) {
-              invoices (FromDate: $FromDate ToDate: $ToDate SalesPersonCode: $SalesPersonCode SalesPointCode: $SalesPointCode limit: $limit offset: $offset) {
-                count
-                items {
+            query ($filter: String $FromDate: Date! $ToDate: Date! $SalesPersonCode: Int $SalesPointCode: String $limit: Int $offset: Int) {
+              invoices (filter: $filter FromDate: $FromDate ToDate: $ToDate SalesPersonCode: $SalesPersonCode SalesPointCode: $SalesPointCode limit: $limit offset: $offset) {
+                totalItems
+                pageItems {
                   DocEntry
                   DocNum
                   DocDate
@@ -243,11 +255,9 @@ export default {
                   JournalMemo
                   PaymentGroupCode
                   DocTime
-                  SalesPersonCode
                   SalesPerson {
-                    SalesEmployeeCode
-                    SalesEmployeeName
-                    EmployeeID
+                    SalesPersonCode
+                    SalesPersonName
                   }
                   Cancelled
                   U_TIPODOC
@@ -267,11 +277,22 @@ export default {
                     Quantity
                     PriceAfterVAT
                   }
+                  U_FECHALIM
+                  U_EXENTO
+                  TaxSerie {
+                    U_ACTIVIDAD
+                    U_LEYENDA
+                    U_DIRECCION
+                    U_CIUDAD
+                    U_PAIS
+                    U_SUCURSAL                      
+                  }
                 }
               }
             }
           `,
           variables: {
+            filter: filter.length ? filter : null,
             SalesPersonCode: SalesPersonCode.value,
             SalesPointCode: SalesPointCode.value,
             FromDate: FromDate.value.replace(/\//g, ''),
@@ -281,10 +302,10 @@ export default {
           }
         })
 
-        table.data = items
+        table.data = pageItems
         table.pagination = {
           ...pagination,
-          rowsNumber: count
+          rowsNumber: totalItems
         }
       } catch (error) {
         gql.handleError(error)
@@ -315,81 +336,37 @@ export default {
 
     const rePrintLoading = ref(false)
 
-    async function rePrint ({ DocEntry }) {
-      try {
-        rePrintLoading.value = true
-
-        const { Invoice } = await gql({
-          query: /* GraphQL */`
-            query ($DocEntry: Int!) {
-              Invoice: print_invoice (DocEntry: $DocEntry) {
-                DocDate
-                DocTime
-                DocTotal
-                PaymentGroupCode
-                U_GPOS_Type
-                U_GPOS_Serial
-                U_GPOS_SalesPointCode
-                DocumentLines {
-                  ItemCode
-                  ItemDescription
-                  Quantity
-                  PriceAfterVAT
-                }
-                U_FECHALIM
-                U_EXENTO
-                U_ACTIVIDAD
-                U_LEYENDA
-                U_DIRECCION
-                U_CIUDAD
-                U_PAIS
-                U_SUCURSAL
-                U_NRO_FAC
-                U_NROAUTOR
-                U_CODCTRL
-                U_NIT
-                U_RAZSOC
-              }
-            }
-          `,
-          variables: { DocEntry }
-        })
-
-        print({
-          template: 'invoice',
-          preview: true,
-          test: false,
-          printOptions: {
-            silent: true,
-            deviceName: 'Facturas',
-            printBackground: true,
-            margins: {
-              marginType: 'none'
-            }
-          },
-          copy: false,
-          data: Invoice
-        })
-        print({
-          template: 'invoice',
-          preview: true,
-          test: false,
-          printOptions: {
-            silent: true,
-            deviceName: 'Facturas',
-            printBackground: true,
-            margins: {
-              marginType: 'none'
-            }
-          },
-          copy: true,
-          data: Invoice
-        })
-      } catch (error) {
-        gql.handleError(error)
-      } finally {
-        rePrintLoading.value = false
-      }
+    function rePrint (Invoice) {
+      print({
+        template: 'invoice',
+        preview: true,
+        test: false,
+        printOptions: {
+          silent: true,
+          deviceName: 'Facturas',
+          printBackground: true,
+          margins: {
+            marginType: 'none'
+          }
+        },
+        copy: false,
+        data: Invoice
+      })
+      print({
+        template: 'invoice',
+        preview: true,
+        test: false,
+        printOptions: {
+          silent: true,
+          deviceName: 'Facturas',
+          printBackground: true,
+          margins: {
+            marginType: 'none'
+          }
+        },
+        copy: true,
+        data: Invoice
+      })
     }
 
     return {

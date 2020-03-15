@@ -28,16 +28,16 @@
               </q-item-section>
             </template>
             <q-list dark class="bg-secondary">
-              <q-item v-if="PrimaryPrice" clickable @click="ItemUpdate.Price = PrimaryPrice.Price">
+              <q-item v-if="value.Item.PrimaryPrice" clickable @click="ItemUpdate.Price = value.Item.PrimaryPrice">
                 <q-item-section>
-                  <q-item-label caption>{{PrimaryPrice.PriceListName}}</q-item-label>
-                  <q-item-label>{{formatPrice(PrimaryPrice.Price)}}</q-item-label>
+                  <q-item-label caption>{{BusinessPartner.PrimaryPriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(value.Item.PrimaryPrice)}}</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-item v-if="SecondaryPrice" clickable @click="ItemUpdate.Price = SecondaryPrice.Price">
+              <q-item v-if="value.Item.SecondaryPrice && !BusinessPartner.Affiliate && BusinessPartner.SecondaryPriceList !== BusinessPartner.PrimaryPriceList" clickable @click="ItemUpdate.Price = value.Item.SecondaryPrice">
                 <q-item-section>
-                  <q-item-label caption>{{SecondaryPrice.PriceListName}}</q-item-label>
-                  <q-item-label>{{formatPrice(SecondaryPrice.Price)}}</q-item-label>
+                  <q-item-label caption>{{BusinessPartner.SecondaryPriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(value.Item.SecondaryPrice)}}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item v-if="value.Item.AllowManualPrice" clickable>
@@ -98,7 +98,7 @@
 <script>
 import { Dialog } from 'quasar'
 import { ref, reactive, computed } from '@vue/composition-api'
-import { formatPrice, itemSubTotal, getPrimaryPrice, getSecondaryPrice } from 'src/utils'
+import { formatPrice, itemSubTotal } from 'src/utils'
 export default {
   name: 'CartItem',
   props: {
@@ -132,13 +132,6 @@ export default {
       }
     }
 
-    const PrimaryPrice = computed(() => {
-      return getPrimaryPrice(props.value.Item.ItemPrices, props.BusinessPartner.PriceListNum)
-    })
-    const SecondaryPrice = computed(() => {
-      return getSecondaryPrice(props.value.Item.ItemPrices, PrimaryPrice.value)
-    })
-
     const canUpdate = computed(() => {
       if (ItemUpdate.Quantity !== props.value.Quantity) return true
       if (ItemUpdate.Price !== props.value.Price) return true
@@ -164,8 +157,6 @@ export default {
     return {
       formatPrice,
       itemSubTotal,
-      PrimaryPrice,
-      SecondaryPrice,
       ItemUpdate,
       showDialog,
       edit,

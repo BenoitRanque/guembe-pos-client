@@ -14,7 +14,6 @@ function print (jobs) {
   const { ipcRenderer } = require('electron')
   // if current window is a print preview window, print method prints current content.
   // else, print method sends a print job to the main thread
-  console.log('Sending print job', jobs)
   if (state.job && state.job.preview) {
     ipcRenderer.send('PRINT_JOB_PREVIEW_PRINT', state.job)
   } else {

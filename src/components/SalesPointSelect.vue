@@ -66,12 +66,14 @@ export default {
       try {
         LoadingOptions.value = true
 
-        const { options } = await gql({
+        const { salespoints: { options } } = await gql({
           query: /* GraphQL */`
             query {
-              options: salespoints {
-                value: Code
-                label: Name
+              salespoints {
+                options: pageItems {
+                  value: Code
+                  label: Name
+                }
               }
             }
           `

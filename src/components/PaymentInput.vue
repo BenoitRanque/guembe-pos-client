@@ -25,10 +25,6 @@
               dense
               label="Effectivo Bolivianos"
               outlined
-              type="number"
-              min="0"
-              step="0.01"
-              pattern="\d+(\.\d\d?)?"
             ></q-input>
           </div>
           <div class="col-12">
@@ -40,10 +36,6 @@
               dense
               label="Effectivo Dolares"
               outlined
-              type="number"
-              min="0"
-              step="0.01"
-              pattern="\d+(\.\d\d?)?"
             ></q-input>
           </div>
         </div>
@@ -74,10 +66,8 @@
               dense
               outlined
               suffix="BS"
+              autofocus
               label="Importe"
-              type="number"
-              step="0.01"
-              pattern="^\d+(\.\d\d?)?$"
               :rules="[
                 val => !value.CardEnabled || val ? true : 'Campo requerido',
                 val => !value.CardEnabled || Number(val) <= totalDue ? true : 'Total tarjeta execede total a pagar'
@@ -158,8 +148,8 @@
     <payment-details :total-due="totalDue" :value="value"></payment-details>
     <q-separator></q-separator>
     <div class="q-pa-md row justify-around">
-      <q-btn class="q-mx-md q-mb-md" type="reset" flat>reset</q-btn>
-      <q-btn class="q-mx-md q-mb-md" type="submit" color="primary">Continuar</q-btn>
+      <q-btn class="q-mx-md" type="reset" flat>reset</q-btn>
+      <q-btn class="q-mx-md" type="submit" color="primary">Continuar</q-btn>
     </div>
   </q-form>
 </template>
@@ -168,7 +158,8 @@
 import PaymentDetails from 'components/PaymentDetails'
 import store from 'src/store'
 import { formatPrice } from 'src/utils'
-import { computed } from '@vue/composition-api'
+import { computed, ref } from '@vue/composition-api'
+import gql from 'src/gql'
 import { date, Notify } from 'quasar'
 const { formatDate, endOfDate } = date
 export default {
@@ -189,14 +180,33 @@ export default {
       emit('input', Object.assign({}, props.value, { [key]: value }))
     }
 
-    const CardOptions = computed(() => {
-      return store.state.config.CreditCards.map(({ CreditCardCode: value, CreditCardName: label }) => ({ value, label }))
-    })
+    const CardOptions = ref([])
+
+    async function loadCardOptions () {
+      try {
+        const { creditcards: { options } } = await gql({
+          query: /* GraphQL */`
+            query {
+              creditcards {
+                options: pageItems {
+                  value: CreditCard
+                  label: CardName
+                }
+              }
+            }
+          `
+        })
+        CardOptions.value = options
+      } catch (error) {
+        gql.handleError(error)
+      }
+    }
+    loadCardOptions()
 
     function reset () {
       emit('input', {
-        CashEnabled: true,
-        CashBS: props.totalDue,
+        CashEnabled: false,
+        CashBS: 0,
         CashUSD: 0,
         CardEnabled: false,
         CreditSum: 0,
@@ -232,8 +242,7 @@ export default {
     function submit () {
       if (!dueCovered.value) {
         return Notify.create({
-          color: 'negative',
-          icon: 'mdi-alert',
+          type: 'negative',
           message: `Saldo no cubierto`
         })
       }

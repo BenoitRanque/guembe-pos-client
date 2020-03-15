@@ -2,20 +2,15 @@
   <q-page padding>
     <div class="text-h4">Configuracion</div>
     <sales-point-select label="Punto de Venta" v-model="SalesPointCode"></sales-point-select>
-    <div class="row q-my-md">
-      <q-btn @click="saveConfig" icon="mdi-content-save">Actualizar Configuracion</q-btn>
-      <q-space/>
-      <q-btn v-if="dev" @click="loadConfig" icon="mdi-refresh">Cargar Configuracion Local</q-btn>
-    </div>
   </q-page>
 </template>
 
 <script>
 import SalesPointSelect from 'components/SalesPointSelect'
 import store from 'src/store'
-import gql from 'src/gql'
-import { computed } from '@vue/composition-api'
-import { Loading } from 'quasar'
+// import gql from 'src/gql'
+import { computed, watch } from '@vue/composition-api'
+// import { Loading } from 'quasar'
 export default {
   name: 'Settings',
   components: { SalesPointSelect },
@@ -29,40 +24,16 @@ export default {
       }
     })
 
-    async function saveConfig () {
-      try {
-        await store.dispatch('config/saveLocalConfig')
-        try {
-          Loading.show({ message: 'Cargando Configuracion' })
-          await store.dispatch('config/loadSalesPointConfig')
-        } catch (error) {
-          gql.handleError(error)
-        } finally {
-          Loading.hide()
-        }
-      } catch (error) {
-        gql.handleError(error)
-      }
-    }
-
-    async function loadConfig () {
-      store.dispatch('config/loadLocalConfig')
-      try {
-        Loading.show({ message: 'Cargando Configuracion' })
-        await store.dispatch('config/loadSalesPointConfig')
-      } catch (error) {
-        gql.handleError(error)
-      } finally {
-        Loading.hide()
-      }
-    }
+    watch(SalesPointCode, () => {
+      store.dispatch('config/loadSalesPointConfig')
+    })
 
     store.dispatch('config/loadLocalConfig')
 
     return {
       dev: computed(() => process.env.DEV),
-      saveConfig,
-      loadConfig,
+      // saveConfig,
+      // loadConfig,
       SalesPointCode
     }
   }

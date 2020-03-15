@@ -10,7 +10,7 @@ module.exports = function (ctx) {
       'composition-api',
       'print',
       'gql',
-      'readyMainWindow'
+      'loadConfig'
       // 'restoreConfiguration',
       // 'restoreSession'
     ],
@@ -59,7 +59,10 @@ module.exports = function (ctx) {
       ],
       config: {
         notify: {
-          timeout: 20000
+          timeout: 20000,
+          actions: [
+            { label: 'Cerrar', handler: () => { /* ... */ } }
+          ]
         }
       }
     },

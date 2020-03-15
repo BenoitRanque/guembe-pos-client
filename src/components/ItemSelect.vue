@@ -9,46 +9,33 @@
           <q-btn flat dense icon="mdi-close" v-close-popup></q-btn>
         </q-bar>
         <q-table
-          class="q-px-sm"
           flat
           :data="data"
           :columns="columns"
           row-key="ItemCode"
           :pagination.sync="pagination"
           :filter="filter"
-          hide-header
-          grid
+          :loading="loading"
+          @request="onRequest"
+          @row-click="(evt, row) => selected(row)"
         >
           <template v-slot:top-left>
             <q-input class="col" autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
               <template v-slot:prepend>
                 <q-icon name="mdi-magnify" />
               </template>
+              <template v-slot:after>
+                <q-btn @click="showScanBarcodeDialog = true" class="col" flat dense icon="mdi-barcode-scan" color="primary">
+                  <q-tooltip>Escanear codigo de barras</q-tooltip>
+                </q-btn>
+              </template>
             </q-input>
           </template>
-          <template v-slot:item="props">
-            <q-card
-              :key="props.row.ItemCode"
-              @click="selected(props.row)"
-              v-close-popup
-              v-ripple
-              class="q-ma-xs bg-blue-2 cursor-pointer"
-            >
-              <q-card-section>
-                <div class="text-body2 text-weight-bold">
-                  {{props.row.ItemName}}
-                </div>
-                <div class="text-caption row">
-                  <span>{{props.row.ItemCode}}</span>
-                  <q-space></q-space>
-                  <span v-if="BusinessPartner && getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum)">
-                    {{formatPrice(getPrimaryPrice(props.row.ItemPrices, BusinessPartner.PriceListNum).Price)}}
-                  </span>
-                </div>
-              </q-card-section>
-            </q-card>
-          </template>
         </q-table>
+        <q-separator></q-separator>
+        <q-card-actions align="center">
+          <q-btn flat v-close-popup>Cerrar</q-btn>
+        </q-card-actions>
       </q-card>
     </q-dialog>
     <q-dialog v-model="showSelectedItemDialog">
@@ -75,16 +62,16 @@
               </q-item-section>
             </template>
             <q-list dark class="bg-secondary">
-              <q-item v-if="SelectedItemPrimaryPrice" clickable @click="SelectedItem.Price = SelectedItemPrimaryPrice.Price">
+              <q-item clickable v-if="SelectedItem.Item.PrimaryPrice" @click="SelectedItem.Price = SelectedItem.Item.PrimaryPrice">
                 <q-item-section>
-                  <q-item-label caption>{{SelectedItemPrimaryPrice.PriceListName}}</q-item-label>
-                  <q-item-label>{{formatPrice(SelectedItemPrimaryPrice.Price)}}</q-item-label>
+                  <q-item-label caption>{{BusinessPartner.PrimaryPriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(SelectedItem.Item.PrimaryPrice)}}</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-item v-if="SelectedItemSecondaryPrice" clickable @click="SelectedItem.Price = SelectedItemSecondaryPrice.Price">
+              <q-item clickable v-if="SelectedItem.Item.SecondaryPrice && !BusinessPartner.Affiliate && BusinessPartner.SecondaryPriceList !== BusinessPartner.PrimaryPriceList" @click="SelectedItem.Price = SelectedItem.Item.SecondaryPrice">
                 <q-item-section>
-                  <q-item-label caption>{{SelectedItemSecondaryPrice.PriceListName}}</q-item-label>
-                  <q-item-label>{{formatPrice(SelectedItemSecondaryPrice.Price)}}</q-item-label>
+                  <q-item-label caption>{{BusinessPartner.SecondaryPriceListName}}</q-item-label>
+                  <q-item-label>{{formatPrice(SelectedItem.Item.SecondaryPrice)}}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item v-if="SelectedItem.Item.AllowManualPrice" clickable>
@@ -138,44 +125,175 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="showScanBarcodeDialog" :persistent="loadingScannedItem">
+      <q-card>
+        <q-bar>
+          Escanear Codigo de Barras
+          <q-space></q-space>
+          <q-btn flat dense icon="mdi-close" v-close-popup :disable="loadingScannedItem"></q-btn>
+        </q-bar>
+        <q-card-section >
+          <barcode-scan :active="showScanBarcodeDialog && !loadingScannedItem" @scanned="barcodeInput"></barcode-scan>
+        </q-card-section>
+        <q-separator></q-separator>
+        <q-card-actions align="center">
+          <q-btn flat v-close-popup :disable="loadingScannedItem">Cerrar</q-btn>
+        </q-card-actions>
+        <q-inner-loading :showing="loadingScannedItem">
+          <q-spinner></q-spinner>
+        </q-inner-loading>
+      </q-card>
+    </q-dialog>
   </q-btn>
 </template>
 
 <script>
-import { ref, reactive, toRefs, computed } from '@vue/composition-api'
-import store from 'src/store'
-import { formatPrice, itemSubTotal, getPrimaryPrice, getSecondaryPrice } from 'src/utils'
-
+import BarcodeScan from 'components/BarcodeScan'
+import { ref, reactive, toRefs } from '@vue/composition-api'
+import { formatPrice, itemSubTotal } from 'src/utils'
+import { Notify } from 'quasar'
+import gql from 'src/gql'
 export default {
   name: 'ItemSelect',
+  components: { BarcodeScan },
   props: {
+    SalesPointCode: {
+      type: String,
+      required: true
+    },
     BusinessPartner: {
       type: Object,
-      default: () => ({ PriceListNum: 1 })
+      default: () => ({ PrimaryPriceList: 1, SecondaryPriceList: 1 })
     }
   },
   setup (props, { emit }) {
+    const showScanBarcodeDialog = ref(false)
+    const loadingScannedItem = ref(false)
+
+    async function barcodeInput (Code) {
+      try {
+        loadingScannedItem.value = true
+
+        const { item } = await gql({
+          query: /* GraphQL */`
+            query ($Code: String! $SalesPointCode: String! $PrimaryPriceList: Int! $SecondaryPriceList: Int!) {
+              item (Code: $Code CodeType: BarCode SalesPointCode:  $SalesPointCode PrimaryPriceList: $PrimaryPriceList SecondaryPriceList: $SecondaryPriceList) {
+                ItemCode
+                ItemName
+                AllowCredit
+                AllowAffiliate
+                AllowManualPrice
+                PrimaryPrice
+                SecondaryPrice
+                Stock
+              }
+            }
+          `,
+          variables: {
+            Code: Code,
+            SalesPointCode: props.SalesPointCode,
+            PrimaryPriceList: props.BusinessPartner.PrimaryPriceList,
+            SecondaryPriceList: props.BusinessPartner.SecondaryPriceList
+          }
+        })
+
+        if (!item) {
+          Notify.create({
+            type: 'warning',
+            message: `No se pudo encontrar el articulo con codigo de barras '${Code}'`
+          })
+        } else {
+          selected(item)
+        }
+      } catch (error) {
+        gql.handleError(error)
+      } finally {
+        loadingScannedItem.value = false
+      }
+    }
+
     const showDialog = ref(false)
 
     const table = reactive({
       columns: [
-        { name: 'ItemCode', field: 'ItemCode' },
-        { name: 'ItemName', field: 'ItemName' },
-        { name: 'Tags', field: Item => Item.Tags.join(' ') }
+        {
+          name: 'ItemCode',
+          label: 'Codigo',
+          field: 'ItemCode',
+          align: 'left'
+        },
+        {
+          name: 'ItemName',
+          label: 'Nombre',
+          field: 'ItemName',
+          align: 'left'
+        },
+        {
+          name: 'PrimaryPrice',
+          label: 'Precio',
+          field: 'PrimaryPrice',
+          align: 'center'
+        },
+        {
+          name: 'Stock',
+          label: 'Stock',
+          field: 'Stock',
+          align: 'center'
+        }
       ],
       filter: '',
       pagination: {
         page: 1,
-        rowsPerPage: 10
+        rowsPerPage: 7,
+        rowsNumber: 0
       },
-      loading: false
+      loading: false,
+      data: []
     })
 
-    const data = computed(() => store.state.config.SalesPoint ? store.state.config.SalesPoint.Catalog : [])
+    async function onRequest ({ pagination, filter } = { pagination: table.pagination, filter: table.filter }) {
+      try {
+        table.loading = true
 
-    function getItemPrice (Item, priceList) {
-      const price = Item.ItemPrices.find(list => list.PriceList === priceList)
-      return price && price.Price !== 0 ? price.Price : null
+        const { items } = await gql({
+          query: /* GraphQL */`
+            query ($limit: Int! $offset: Int! $filter: String $SalesPointCode: String! $PrimaryPriceList: Int! $SecondaryPriceList: Int!) {
+              items (limit: $limit offset: $offset filter: $filter SalesPointCode:  $SalesPointCode PrimaryPriceList: $PrimaryPriceList SecondaryPriceList: $SecondaryPriceList) {
+                totalItems
+                pageItems {
+                  ItemCode
+                  ItemName
+                  AllowCredit
+                  AllowAffiliate
+                  AllowManualPrice
+                  PrimaryPrice
+                  SecondaryPrice
+                  Stock
+                }
+              }
+            }
+          `,
+          variables: {
+            limit: pagination.rowsPerPage,
+            offset: pagination.rowsPerPage * (pagination.page - 1),
+            filter: filter.length ? filter : null,
+            SalesPointCode: props.SalesPointCode,
+            PrimaryPriceList: props.BusinessPartner.PrimaryPriceList,
+            SecondaryPriceList: props.BusinessPartner.SecondaryPriceList
+          }
+        })
+
+        table.pagination = {
+          ...pagination,
+          rowsNumber: items.totalItems
+        }
+
+        table.data = items.pageItems
+      } catch (error) {
+        gql.handleError(error)
+      } finally {
+        table.loading = false
+      }
     }
 
     const showSelectedItemDialog = ref(false)
@@ -185,22 +303,14 @@ export default {
       Price: null
     })
 
-    const SelectedItemPrimaryPrice = computed(() => {
-      if (!SelectedItem.Item || !props.BusinessPartner) return null
-      return getPrimaryPrice(SelectedItem.Item.ItemPrices, props.BusinessPartner.PriceListNum)
-    })
-    const SelectedItemSecondaryPrice = computed(() => {
-      if (!SelectedItem.Item) return null
-      return getSecondaryPrice(SelectedItem.Item.ItemPrices, SelectedItemPrimaryPrice.value)
-    })
-
     function selected (Item) {
       table.filter = ''
 
       SelectedItem.Quantity = 1
       SelectedItem.Item = Item
-      const PrimaryPrice = getPrimaryPrice(Item.ItemPrices, props.BusinessPartner.PriceListNum)
-      SelectedItem.Price = PrimaryPrice ? PrimaryPrice.Price : 0
+      SelectedItem.Price = Item.PrimaryPrice ? Item.PrimaryPrice : Item.SecondaryPrice
+      // const PrimaryPrice = getPrimaryPrice(Item.ItemPrices, props.BusinessPartner.PriceListNum)
+      // SelectedItem.Price = PrimaryPrice ? PrimaryPrice.Price : 0
 
       showSelectedItemDialog.value = true
     }
@@ -208,19 +318,21 @@ export default {
     function done () {
       emit('selected', Object.assign({}, SelectedItem))
     }
+
+    onRequest()
+
     return {
+      showScanBarcodeDialog,
+      loadingScannedItem,
+      barcodeInput,
       showDialog,
-      getItemPrice,
       formatPrice,
+      onRequest,
       ...toRefs(table),
       itemSubTotal,
-      data,
       selected,
       done,
-      getPrimaryPrice,
       SelectedItem,
-      SelectedItemPrimaryPrice,
-      SelectedItemSecondaryPrice,
       showSelectedItemDialog
     }
   }

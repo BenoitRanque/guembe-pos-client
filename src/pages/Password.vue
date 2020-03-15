@@ -58,12 +58,11 @@
             v-model="SAPB1Credentials.Password"
             label="Contraseña SAP"
           ></q-input>
-          <q-input
-            type="number"
-            required
+          <employee-select
             v-model="EmployeeID"
-            label="Codigo de Empleado"
-          ></q-input>
+            label="Empleado"
+            show-unset
+          ></employee-select>
           <q-input
             type="password"
             required

@@ -12,13 +12,15 @@ function getRefreshDelay (token) {
 export async function LOGIN ({ commit, dispatch }, { EmployeeID, Password }) {
   const query = /* GraphQL */`
     query Login ($Credentials: CredentialsInput!) {
-      auth: session_login (Credentials: $Credentials) {
-        token
-        session {
+      session: session_login (Credentials: $Credentials) {
+        Token
+        Employee {
           EmployeeID
-          SalesEmployeeCode
-          SalesEmployeeName
           Roles
+          SalesPerson {
+            SalesPersonCode
+            SalesPersonName
+          }
         }
       }
     }
@@ -30,36 +32,37 @@ export async function LOGIN ({ commit, dispatch }, { EmployeeID, Password }) {
     }
   }
 
-  const { auth } = await gql({ query, variables })
+  const { session } = await gql({ query, variables })
 
-  commit('AUTH', auth)
+  commit('SESSION', session)
   dispatch('SCHEDULE_REFRESH')
 }
 
 export async function REFRESH_TOKEN ({ commit, dispatch }) {
   const query = /* GraphQL */`
     query {
-      auth: session_refresh {
-        token
-        session {
+      session: session_refresh {
+        Token
+        Employee {
           EmployeeID
-          SalesEmployeeCode
-          SalesEmployeeName
           Roles
+          SalesPerson {
+            SalesPersonCode
+            SalesPersonName
+          }
         }
       }
     }
   `
 
-  const { auth } = await gql({ query })
+  const { session } = await gql({ query })
 
-  commit('AUTH', auth)
-
+  commit('SESSION', session)
   dispatch('SCHEDULE_REFRESH')
 }
 
 export async function SCHEDULE_REFRESH ({ commit, dispatch, state }) {
-  const delay = getRefreshDelay(state.token)
+  const delay = getRefreshDelay(state.Token)
 
   const task = setTimeout(async () => {
     try {
@@ -88,7 +91,7 @@ export async function LOGOUT ({ commit, state }) {
   } catch (error) {
     throw error
   } finally {
-    commit('AUTH')
+    commit('SESSION')
 
     clearTimeout(state.refreshTokenTask)
     commit('REFRESH_TOKEN_TASK')

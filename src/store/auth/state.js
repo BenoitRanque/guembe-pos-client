@@ -1,5 +1,5 @@
 export default {
-  token: null,
-  session: null,
+  Token: null,
+  Employee: null,
   refreshTokenTask: null
 }

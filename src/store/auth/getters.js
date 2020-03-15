@@ -1,26 +1,26 @@
 export function isAuthenticated (state) {
-  return state.session !== null
+  return state.Employee !== null
 }
 
 export function EmployeeID (state, { isAuthenticated }) {
   if (!isAuthenticated) {
     return null
   }
-  return state.session.EmployeeID
+  return state.Employee.EmployeeID
 }
 
-export function SalesEmployeeCode (state, { isAuthenticated }) {
+export function SalesPersonCode (state, { isAuthenticated }) {
   if (!isAuthenticated) {
     return null
   }
-  return state.session.SalesEmployeeCode
+  return state.Employee.SalesPersonCode
 }
 
-export function SalesEmployeeName (state, { isAuthenticated }) {
+export function SalesPersonName (state, { isAuthenticated }) {
   if (!isAuthenticated) {
     return null
   }
-  return state.session.SalesEmployeeName
+  return state.Employee.SalesPerson.SalesPersonName
 }
 
 export function isAuthorized (state, { isAuthenticated }) {
@@ -30,9 +30,9 @@ export function isAuthorized (state, { isAuthenticated }) {
     }
 
     if (Array.isArray(roles)) {
-      return state.session.Roles.some(role => roles.includes(role))
+      return state.Employee.Roles.some(role => roles.includes(role))
     } else {
-      return state.session.Roles.includes(roles)
+      return state.Employee.Roles.includes(roles)
     }
   }
 }

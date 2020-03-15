@@ -7,7 +7,9 @@
           dense
           round
           @click="leftDrawerOpen = !leftDrawerOpen"
-          icon="mdi-menu"
+          :icon="leftDrawerOpen ? 'mdi-close' : 'mdi-menu'"
+          style="transition: transform 0.1s ease-in-out"
+          :class="leftDrawerOpen ? 'rotate-180' : ''"
           aria-label="Menu"
         />
 
@@ -18,11 +20,7 @@
           </template>
         </q-toolbar-title>
         <template v-if="isAuthenticated">
-          <q-btn-dropdown flat>
-            <template v-slot:label>
-              <q-icon name="mdi-account-circle"></q-icon>
-              {{SalesEmployeeName}}
-            </template>
+          <q-btn-dropdown flat icon-right="mdi-account-circle" :label="SalesPersonName">
             <q-list>
               <q-item>
                 <q-item-section side>
@@ -30,7 +28,7 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label caption>Roles</q-item-label>
-                  <q-item-label>{{$store.state.auth.session.Roles.join(', ')}}</q-item-label>
+                  <q-item-label>{{$store.state.auth.Employee.Roles.join(', ')}}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-separator></q-separator>
@@ -47,51 +45,58 @@
             </q-list>
           </q-btn-dropdown>
         </template>
+        <q-btn round flat icon="mdi-home" to="/"></q-btn>
       </q-toolbar>
     </q-header>
 
     <q-drawer
+      :breakpoint="0"
       v-model="leftDrawerOpen"
       show-if-above
       bordered
-      content-class="bg-grey-2"
+      content-class="bg-secondary text-weight-medium"
     >
       <q-list>
-        <q-item to="/" exact>
-          <q-item-section>
-            <q-item-label>
-              Inicio
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item to="/settings" v-if="isAuthorized('administrador')">
-          <q-item-section>
-            <q-item-label>
-              Configuracion
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item to="/password">
-          <q-item-section>
-            <q-item-label>
-              Contraseña
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item to="/quicksale" v-if="isAuthorized(['administrador', 'cajeros'])">
-          <q-item-section>
-            <q-item-label>
-              Venta Rapida
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item to="/report" v-if="isAuthorized(['administrador', 'cajeros'])">
-          <q-item-section>
-            <q-item-label>
-              Reporte de Ventas
-            </q-item-label>
-          </q-item-section>
-        </q-item>
+        <q-expansion-item dark label="Ventas" icon="mdi-store" group="MainMenu">
+          <q-list class="bg-white shadow-6">
+            <q-item to="/quicksale" :disable="!isAuthorized(['administrador', 'cajeros'])">
+              <q-item-section>
+                <q-item-label>
+                  Venta Rapida
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-expansion-item>
+        <q-expansion-item dark label="Reportes" icon="mdi-poll-box" group="MainMenu">
+          <q-list class="bg-white shadow-6">
+            <q-item to="/report" :disable="!isAuthorized(['administrador', 'cajeros'])">
+              <q-item-section>
+                <q-item-label>
+                  Reporte de Ventas
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-expansion-item>
+        <q-expansion-item dark label="Configuracion" icon="mdi-wrench" group="MainMenu">
+          <q-list class="bg-white shadow-6">
+            <q-item to="/settings" :disable="!isAuthorized('administrador')">
+              <q-item-section>
+                <q-item-label>
+                  Punto de venta
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item to="/password">
+              <q-item-section>
+                <q-item-label>
+                  Contraseña
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-expansion-item>
       </q-list>
     </q-drawer>
 
@@ -112,7 +117,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('auth', ['isAuthenticated', 'isAuthorized', 'SalesEmployeeName'])
+    ...mapGetters('auth', ['isAuthenticated', 'isAuthorized', 'SalesPersonName'])
   },
   methods: {
     async logout () {

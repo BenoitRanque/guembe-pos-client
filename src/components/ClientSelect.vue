@@ -26,6 +26,10 @@
             </q-input>
           </template>
         </q-table>
+        <q-separator></q-separator>
+        <q-card-actions align="center">
+          <q-btn flat v-close-popup>Cerrar</q-btn>
+        </q-card-actions>
       </q-card>
     </q-dialog>
   </q-btn>
@@ -87,12 +91,12 @@ export default {
       try {
         table.loading = true
 
-        const { business_partners: { count, items } } = await gql({
+        const { business_partners: { totalItems, pageItems } } = await gql({
           query: /* GraphQL */`
-            query ($limit: Int! $offset: Int! $search: String) {
-              business_partners (limit: $limit offset: $offset search: $search) {
-                count
-                items {
+            query ($limit: Int! $offset: Int! $filter: String) {
+              business_partners (limit: $limit offset: $offset filter: $filter) {
+                totalItems
+                pageItems {
                   CardCode
                   CardName
                   CardForeignName
@@ -100,11 +104,10 @@ export default {
                   PayTermsGrpCode
                   Affiliate
                   VatLiable
-                  PriceListNum
-                  PriceList {
-                    PriceListNo
-                    PriceListName
-                  }
+                  PrimaryPriceList
+                  PrimaryPriceListName
+                  SecondaryPriceList
+                  SecondaryPriceListName
                 }
               }
             }
@@ -112,17 +115,16 @@ export default {
           variables: {
             limit: pagination.rowsPerPage,
             offset: pagination.rowsPerPage * (pagination.page - 1),
-            search: filter.length ? filter : null
-          },
-          role: 'anonymous'
+            filter: filter.length ? filter : null
+          }
         })
 
         table.pagination = {
           ...pagination,
-          rowsNumber: count
+          rowsNumber: totalItems
         }
 
-        table.data = items
+        table.data = pageItems
       } catch (error) {
         gql.handleError(error)
       } finally {

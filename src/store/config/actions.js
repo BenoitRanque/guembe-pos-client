@@ -1,5 +1,5 @@
 import { gql } from 'src/gql'
-import { LocalStorage, Notify } from 'quasar'
+import { LocalStorage } from 'quasar'
 
 export function loadLocalConfig ({ commit }) {
   const config = LocalStorage.getItem('CONFIG')
@@ -17,39 +17,16 @@ export function saveLocalConfig ({ state, dispatch }) {
 }
 export async function loadSalesPointConfig ({ state, commit }) {
   if (!state.SalesPointCode) {
-    return Notify.create({
-      icon: 'mdi-alert-octagon',
-      color: 'negative',
-      message: 'Para buen uso del POS debe configurar el punto de venta'
-    })
+    return false
   }
 
-  const { salespoint, pricelists, creditcards, catalog } = await gql({
+  const { salespoint, changerate } = await gql({
     query: /* GraphQL */`
       query ($Code: String!) {
-        pricelists {
-          PriceListNo
-          PriceListName
-        }
-        creditcards {
-          CreditCardCode
-          CreditCardName
-        }
+        changerate
         salespoint (Code: $Code) {
           Code
           Name
-        }
-        catalog (SalesPointCode: $Code) {
-          ItemCode
-          ItemName
-          AllowManualPrice
-          AllowCredit
-          AllowAffiliate
-          Tags
-          ItemPrices {
-            PriceList
-            Price
-          }
         }
       }
     `,
@@ -57,10 +34,8 @@ export async function loadSalesPointConfig ({ state, commit }) {
       Code: state.SalesPointCode
     }
   })
-  commit('SALESPOINT', {
-    ...salespoint,
-    Catalog: catalog.sort((a, b) => a.ItemName.localeCompare(b.ItemName))
-  })
-  commit('PRICELISTS', pricelists)
-  commit('CREDITCARDS', creditcards)
+  commit('SALESPOINT', salespoint)
+  commit('EXCHANGERATE', changerate)
+
+  return true
 }

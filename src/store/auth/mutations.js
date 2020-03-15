@@ -1,6 +1,6 @@
-export function AUTH (state, { token, session } = { token: null, session: null }) {
-  state.token = token
-  state.session = session
+export function SESSION (state, { Token, Employee } = { Token: null, Employee: null }) {
+  state.Token = Token
+  state.Employee = Employee
 }
 
 export function REFRESH_TOKEN_TASK (state, task = null) {
