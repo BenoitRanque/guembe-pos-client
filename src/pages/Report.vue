@@ -10,6 +10,7 @@
       :loading="loading"
       @request="onRequest"
       @row-click="handleRowClick"
+      :rows-per-page-options="[3,5,7,10,15,25,50]"
     >
       <template v-slot:top>
         <q-input autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">

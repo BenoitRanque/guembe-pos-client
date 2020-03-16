@@ -17,6 +17,7 @@
           :filter="filter"
           @request="onRequest"
           @row-click="(evt, row) => selected(row)"
+          :rows-per-page-options="[3,5,7,10,15,25,50]"
         >
           <template v-slot:top-left>
             <q-input autofocus outlined dense debounce="300" v-model="filter" placeholder="Buscar">
