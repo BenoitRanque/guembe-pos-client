@@ -25,6 +25,7 @@ export default {
     })
 
     watch(SalesPointCode, () => {
+      store.dispatch('config/saveLocalConfig')
       store.dispatch('config/loadSalesPointConfig')
     })
 

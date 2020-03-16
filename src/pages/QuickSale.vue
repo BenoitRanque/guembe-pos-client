@@ -604,7 +604,6 @@ export default {
         message: 'Para buen uso del POS debe configurar el punto de venta'
       })
     } else {
-      store.dispatch('config/loadLocalConfig')
       store.dispatch('config/loadSalesPointConfig')
     }
 

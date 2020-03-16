@@ -6,13 +6,11 @@ export function loadLocalConfig ({ commit }) {
 
   if (config) {
     commit('SALESPOINTCODE', config.SalesPointCode)
-    commit('EXCHANGERATE', config.ExchangeRate)
   }
 }
 export function saveLocalConfig ({ state, dispatch }) {
   LocalStorage.set('CONFIG', {
-    SalesPointCode: state.SalesPointCode,
-    ExchangeRate: state.ExchangeRate
+    SalesPointCode: state.SalesPointCode
   })
 }
 export async function loadSalesPointConfig ({ state, commit }) {

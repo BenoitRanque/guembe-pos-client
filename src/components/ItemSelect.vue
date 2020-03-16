@@ -1,7 +1,7 @@
 <template>
   <q-btn @click="showDialog = true" v-bind="$attrs">
     <slot/>
-    <q-dialog v-model="showDialog" persistent>
+    <q-dialog v-model="showDialog" persistent @hide="reset">
       <q-card style="max-width: 90vw; width: 70vw; max-height: 90vh">
         <q-bar>
           Seleccionar Articulo
@@ -58,7 +58,7 @@
               <q-item-section>
                 <q-item-label caption>Precio Unitario (Click para opciones)</q-item-label>
                 <q-item-label>
-                  {{formatPrice(SelectedItem.Price)}}
+                  {{SelectedItem.Price ? formatPrice(SelectedItem.Price) : 'Estableszca precio'}}
                 </q-item-label>
               </q-item-section>
             </template>
@@ -122,7 +122,7 @@
           </q-item>
         </q-list>
         <q-card-actions align="center">
-          <q-btn @click="done" v-close-popup :disable="SelectedItem.Price === 0" class="q-mx-md q-mb-md" icon="mdi-check" color="primary" label="Aggregar"></q-btn>
+          <q-btn @click="done" v-close-popup :disable="SelectedItem.Price <= 0" class="q-mx-md q-mb-md" icon="mdi-check" color="primary" label="Aggregar"></q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -320,9 +320,15 @@ export default {
       emit('selected', Object.assign({}, SelectedItem))
     }
 
+    function reset () {
+      table.filter = ''
+      onRequest()
+    }
+
     onRequest()
 
     return {
+      reset,
       showScanBarcodeDialog,
       loadingScannedItem,
       barcodeInput,

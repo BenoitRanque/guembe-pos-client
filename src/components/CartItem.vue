@@ -23,7 +23,7 @@
               <q-item-section>
                 <q-item-label caption>Precio Unitario (Click para opciones)</q-item-label>
                 <q-item-label>
-                  {{formatPrice(value.Price)}}
+                  {{value.Price ? formatPrice(value.Price) : 'Estableszca precio'}}
                 </q-item-label>
               </q-item-section>
             </template>
