@@ -135,11 +135,6 @@
               placeholder="Numero voucher"
               :rules="[ val => !value.CardEnabled || val ? true : 'Campo requerido' ]"
             ></q-input>
-            <!-- TODO: determine if these fields are needed -->
-            <!-- OwnerIdNum -->
-            <!-- <q-input dense outlined label="NIT"></q-input> -->
-            <!-- OwnerPhone -->
-            <!-- <q-input dense outlined label="Telefono"></q-input> -->
           </div>
         </div>
       </div>
@@ -148,8 +143,8 @@
     <payment-details :total-due="totalDue" :value="value"></payment-details>
     <q-separator></q-separator>
     <div class="q-pa-md row justify-around">
-      <q-btn class="q-mx-md" type="reset" flat>reset</q-btn>
-      <q-btn class="q-mx-md" type="submit" color="primary">Continuar</q-btn>
+      <q-btn class="q-mx-md" type="reset" flat>limpiar</q-btn>
+      <q-btn class="q-mx-md" type="submit" color="primary">Proceder</q-btn>
     </div>
   </q-form>
 </template>
@@ -269,9 +264,10 @@ export default {
       formatPrice,
       toCardDate,
       fromCardDate,
+      dueCovered,
+      CardOptions,
       reset,
-      submit,
-      CardOptions
+      submit
     }
   }
 }

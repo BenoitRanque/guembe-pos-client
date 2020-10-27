@@ -77,3 +77,61 @@ export function displayDate (date) {
 
   return `${day}/${month}/${year}`
 }
+
+// handle print output from graphql queries
+export function handleSalePrint (Print, Test) {
+  if (Print) {
+    if (Print.Orders) {
+      Print.Orders.forEach(Order => {
+        print({
+          template: 'order',
+          preview: Test,
+          test: Test,
+          printOptions: {
+            silent: true,
+            deviceName: Order.Printer,
+            printBackground: true,
+            margins: {
+              marginType: 'none'
+            }
+          },
+          data: Order
+        })
+      })
+    }
+    if (Print.Invoices) {
+      Print.Invoices.forEach(Invoice => {
+        print({
+          template: 'invoice',
+          preview: Test,
+          test: Test,
+          printOptions: {
+            silent: true,
+            deviceName: 'Facturas',
+            printBackground: true,
+            margins: {
+              marginType: 'none'
+            }
+          },
+          copy: false,
+          data: Invoice
+        })
+        print({
+          template: 'invoice',
+          preview: Test,
+          test: Test,
+          printOptions: {
+            silent: true,
+            deviceName: 'Facturas',
+            printBackground: true,
+            margins: {
+              marginType: 'none'
+            }
+          },
+          copy: true,
+          data: Invoice
+        })
+      })
+    }
+  }
+}

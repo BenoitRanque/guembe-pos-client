@@ -49,8 +49,8 @@
         <tr v-for="(item, index) in Invoice.DocumentLines" :key="index">
           <td style="vertical-align: top" class="text-left">{{item.Quantity}}</td>
           <td style="vertical-align: middle" class="text-left">{{item.ItemDescription}}</td>
-          <td style="vertical-align: bottom" class="text-right">{{formatPrice(item.PriceAfterVAT)}}</td>
-          <td style="vertical-align: bottom" class="text-right">{{formatPrice(lineTotal(item.PriceAfterVAT, item.Quantity))}}</td>
+          <td style="vertical-align: bottom" class="text-right">{{formatPrice(item.Price)}}</td>
+          <td style="vertical-align: bottom" class="text-right">{{formatPrice(lineTotal(item.Price, item.Quantity))}}</td>
         </tr>
       </tbody>
       <tfoot>

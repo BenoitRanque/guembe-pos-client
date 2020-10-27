@@ -159,7 +159,6 @@
 
 <script>
 import gql from 'src/gql'
-import print from 'src/print'
 import ClientSelect from 'components/ClientSelect'
 import ItemSelect from 'components/ItemSelect'
 import CartItem from 'components/CartItem'
@@ -167,7 +166,7 @@ import ShoppingCart from 'components/ShoppingCart'
 import PaymentInput from 'components/PaymentInput'
 import PaymentDetails from 'components/PaymentDetails'
 import { ref, computed, reactive, watch } from '@vue/composition-api'
-import { formatPrice, itemSubTotal } from 'src/utils'
+import { formatPrice, itemSubTotal, handleSalePrint } from 'src/utils'
 import { Notify, Loading } from 'quasar'
 import store from 'src/store'
 import { mapGetters } from 'vuex'
@@ -475,7 +474,7 @@ export default {
                       ItemCode
                       ItemDescription
                       Quantity
-                      PriceAfterVAT
+                      Price
                     }
                     TaxSerie {
                       U_ACTIVIDAD
@@ -503,7 +502,7 @@ export default {
               SalesPointCode: store.state.config.SalesPointCode,
               CardCode: BusinessPartner.value.CardCode,
               Invoice: Invoice,
-              Items: CartItems.value.map(({ Item: { ItemCode }, Quantity, Price: PriceAfterVAT }) => ({ ItemCode, Quantity, PriceAfterVAT }))
+              Items: CartItems.value.map(({ Item: { ItemCode }, Quantity, Price }) => ({ ItemCode, Quantity, Price }))
             }
           }
         })
@@ -518,63 +517,6 @@ export default {
         gql.handleError(error)
       } finally {
         Loading.hide()
-      }
-    }
-
-    function handleSalePrint (Print, Test) {
-      if (Print) {
-        if (Print.Orders) {
-          Print.Orders.forEach(Order => {
-            print({
-              template: 'order',
-              preview: Test,
-              test: Test,
-              printOptions: {
-                silent: true,
-                deviceName: Order.Printer,
-                printBackground: true,
-                margins: {
-                  marginType: 'none'
-                }
-              },
-              data: Order
-            })
-          })
-        }
-        if (Print.Invoices) {
-          Print.Invoices.forEach(Invoice => {
-            print({
-              template: 'invoice',
-              preview: Test,
-              test: Test,
-              printOptions: {
-                silent: true,
-                deviceName: 'Facturas',
-                printBackground: true,
-                margins: {
-                  marginType: 'none'
-                }
-              },
-              copy: false,
-              data: Invoice
-            })
-            print({
-              template: 'invoice',
-              preview: Test,
-              test: Test,
-              printOptions: {
-                silent: true,
-                deviceName: 'Facturas',
-                printBackground: true,
-                margins: {
-                  marginType: 'none'
-                }
-              },
-              copy: true,
-              data: Invoice
-            })
-          })
-        }
       }
     }
 

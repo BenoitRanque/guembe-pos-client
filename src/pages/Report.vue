@@ -86,8 +86,8 @@
               <tr v-for="(item, index) in Invoice.DocumentLines" :key="index">
                 <td class="text-right">{{item.Quantity}}</td>
                 <td class="text-left">{{item.ItemDescription}}</td>
-                <td class="text-right">{{formatPrice(item.PriceAfterVAT)}}</td>
-                <td class="text-right">{{formatPrice(itemSubTotal(item.PriceAfterVAT, item.Quantity))}}</td>
+                <td class="text-right">{{formatPrice(item.Price)}}</td>
+                <td class="text-right">{{formatPrice(itemSubTotal(item.Price, item.Quantity))}}</td>
               </tr>
             </tbody>
             <tfoot>
@@ -98,7 +98,7 @@
               </tr>
               <tr>
                 <th colspan="3" class="text-right">Total</th>
-                <th class="text-right">{{formatPrice(Invoice.DocumentLines.reduce((total, { Quantity, PriceAfterVAT }) => total + ((PriceAfterVAT * 100) * Quantity), 0) / 100)}}</th>
+                <th class="text-right">{{formatPrice(Invoice.DocumentLines.reduce((total, { Quantity, Price }) => total + ((Price * 100) * Quantity), 0) / 100)}}</th>
               </tr>
             </tfoot>
           </q-markup-table>
@@ -187,7 +187,8 @@ const columns = [
     name: 'SalesPoint',
     align: 'left',
     label: 'Punto de Venta',
-    field: 'U_GPOS_SalesPointCode'
+    field: 'SalesPoint',
+    format: value => value.Name
   },
   {
     name: 'DocTotal',
@@ -222,7 +223,7 @@ export default {
     const ToDate = ref(formatDate(today, 'YYYY/MM/DD'))
 
     function validDate (date) {
-      return /\d{4}\/\d{2}\/[0-1]\d/.test(date)
+      return /\d{4}\/[0-1]\d\/\d{2}/.test(date)
     }
 
     const SalesPersonCode = ref(isAdmin ? null : store.state.auth.Employee.SalesPersonCode)
@@ -260,6 +261,9 @@ export default {
                     SalesPersonCode
                     SalesPersonName
                   }
+                  SalesPoint {
+                    Name
+                  }
                   Cancelled
                   U_TIPODOC
                   U_NIT
@@ -276,7 +280,7 @@ export default {
                     ItemCode
                     ItemDescription
                     Quantity
-                    PriceAfterVAT
+                    Price
                   }
                   U_FECHALIM
                   U_EXENTO

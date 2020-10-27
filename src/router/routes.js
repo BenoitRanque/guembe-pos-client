@@ -18,6 +18,9 @@ const routes = [
       { path: 'settings', component: () => import('pages/Settings.vue') },
       { path: 'password', component: () => import('pages/Password.vue') },
       { path: 'quicksale', component: () => import('pages/QuickSale.vue') },
+      { path: 'salesorders', component: () => import('pages/SalesOrders.vue') },
+      { path: 'salesorder', component: () => import('pages/SalesOrder.vue') },
+      { path: 'salesorder/:DocEntry', props: true, component: () => import('pages/SalesOrder.vue') },
       { path: 'report', component: () => import('pages/Report.vue') }
     ]
   }

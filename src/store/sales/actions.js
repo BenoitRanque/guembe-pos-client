@@ -223,7 +223,7 @@ export async function FINALIZE ({ state, getters }) {
   const Items = state.QuickSale.Items.map(({ item, quantity, priceList, price }) => ({
     ItemCode: item.ItemCode,
     Quantity: quantity,
-    PriceAfterVAT: priceList !== null ? getters.itemPrice(item.ItemPrices, priceList) : price
+    Price: priceList !== null ? getters.itemPrice(item.ItemPrices, priceList) : price
   }))
   const { quick_sale: documents } = await gql({
     query: /* GraphQL */`

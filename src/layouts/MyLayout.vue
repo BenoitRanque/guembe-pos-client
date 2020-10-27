@@ -59,10 +59,17 @@
       <q-list>
         <q-expansion-item dark label="Ventas" icon="mdi-store" group="MainMenu">
           <q-list class="bg-white shadow-6">
-            <q-item to="/quicksale" :disable="!isAuthorized(['administrador', 'cajeros'])">
+            <q-item to="/salesorder" exact :disable="!isAuthorized(['administrador', 'cajeros', 'meseros'])">
               <q-item-section>
                 <q-item-label>
-                  Venta Rapida
+                  Nueva Venta
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item to="/salesorders" :disable="!isAuthorized(['administrador', 'cajeros', 'meseros'])">
+              <q-item-section>
+                <q-item-label>
+                  Ventas Existentes
                 </q-item-label>
               </q-item-section>
             </q-item>
