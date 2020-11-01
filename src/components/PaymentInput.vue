@@ -19,6 +19,7 @@
             <q-input
               :disable="!value.CashEnabled"
               :value="value.CashBS"
+              debounce="500"
               @input="update('CashBS', /\d+(\.\d\d?)?/.test($event) ? Number($event) : $event ? value.CashBS : 0)"
               suffix="BS"
               autofocus
@@ -31,6 +32,7 @@
             <q-input
               :disable="!value.CashEnabled"
               :value="value.CashUSD"
+              debounce="500"
               @input="update('CashUSD', /\d+(\.\d\d?)?/.test($event) ? Number($event) : $event ? value.CashUSD : 0)"
               suffix="US"
               dense
@@ -62,6 +64,7 @@
               :disable="!value.CardEnabled"
               :required="!value.CardEnabled"
               :value="value.CreditSum"
+              debounce="500"
               @input="update('CreditSum', /\d+(\.\d\d?)?/.test($event) ? Number($event) : $event ? value.CreditSum : 0)"
               dense
               outlined
@@ -112,6 +115,7 @@
               :disable="!value.CardEnabled"
               :required="!value.CardEnabled"
               :value="toCardDate(value.CardValidUntil)"
+              debounce="500"
               @input="update('CardValidUntil', fromCardDate($event))"
               dense
               outlined

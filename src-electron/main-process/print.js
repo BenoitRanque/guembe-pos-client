@@ -47,11 +47,12 @@ export async function handlePrintJobs (...jobs) {
       const job = queue.shift()
 
       if (job.preview) {
-        await createPrintWindow((event) => {
-          event.sender.webContents.send('PRINT_JOB_PREVIEW', Object.assign(job, {
-            printers: event.sender.webContents.getPrinters()
-          }))
-        })
+        const printWindow = await createPrintWindow()
+        // WAIT 3 SECONDS BEFORE PROCEEDING. THIS IS A DIRTY HACK!!!
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        printWindow.webContents.send('PRINT_JOB_PREVIEW', Object.assign(job, {
+          printers: printWindow.webContents.getPrinters()
+        }))
       } else {
         if (!printWindow) {
           printWindow = await createPrintWindow()
@@ -60,6 +61,7 @@ export async function handlePrintJobs (...jobs) {
             printWindow = null
           })
 
+          // WAIT 3 SECONDS BEFORE PROCEEDING. THIS IS A DIRTY HACK!!!
           await new Promise(resolve => setTimeout(resolve, 3000))
         }
 
@@ -75,7 +77,7 @@ export async function handlePrintJobs (...jobs) {
   }
 }
 
-function createPrintWindow (ready = function ready () {}) {
+function createPrintWindow () {
   return new Promise(async resolve => {
     const printWindow = new BrowserWindow({
       width: 400,
@@ -91,11 +93,7 @@ function createPrintWindow (ready = function ready () {}) {
       }
     })
 
-    printWindow.once('ready-to-show', (event) => {
-      // printWindow.show()
-      ready(event)
-      resolve(printWindow)
-    })
+    printWindow.once('ready-to-show', () => resolve(printWindow))
 
     printWindow.loadURL(`${process.env.APP_URL}#print/`)
   })

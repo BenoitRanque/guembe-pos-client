@@ -1,4 +1,5 @@
 import store from 'src/store'
+import { print } from 'src/print'
 
 export function formatPrice (price) {
   // return `${price} BS`
@@ -81,9 +82,11 @@ export function displayDate (date) {
 // handle print output from graphql queries
 export function handleSalePrint (Print, Test) {
   if (Print) {
+    const jobs = []
+
     if (Print.Orders) {
       Print.Orders.forEach(Order => {
-        print({
+        jobs.push({
           template: 'order',
           preview: Test,
           test: Test,
@@ -99,9 +102,26 @@ export function handleSalePrint (Print, Test) {
         })
       })
     }
+    if (Print.Receipt) {
+      jobs.push({
+        template: 'receipt',
+        preview: Test,
+        test: Test,
+        printOptions: {
+          silent: true,
+          deviceName: 'CUENTAS',
+          printBackground: true,
+          margins: {
+            marginType: 'none'
+          }
+        },
+        copy: false,
+        data: Print.Receipt
+      })
+    }
     if (Print.Invoices) {
       Print.Invoices.forEach(Invoice => {
-        print({
+        jobs.push({
           template: 'invoice',
           preview: Test,
           test: Test,
@@ -116,7 +136,7 @@ export function handleSalePrint (Print, Test) {
           copy: false,
           data: Invoice
         })
-        print({
+        jobs.push({
           template: 'invoice',
           preview: Test,
           test: Test,
@@ -132,6 +152,10 @@ export function handleSalePrint (Print, Test) {
           data: Invoice
         })
       })
+    }
+
+    if (jobs.length) {
+      print(jobs)
     }
   }
 }

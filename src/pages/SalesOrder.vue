@@ -114,6 +114,14 @@ export default {
 
     const { SalesOrder, SalesOrderLoading, loadSalesOrder } = userSalesOrder()
 
+    function resetState () {
+      showCheckoutDrawer.value = false
+      EditableDocumentLines.value = []
+      BusinessPartner.value = null
+      SalesOrder.value = null
+      loadBusinessPartner('CL000001')
+    }
+
     const TotalDue = computed(() => {
       let cents = 0
 
@@ -210,6 +218,19 @@ export default {
                         Quantity
                       }
                     }
+                    Receipt {
+                      DocDate
+                      DocTotal
+                      SalesPersonCode
+                      U_GPOS_Serial
+                      U_GPOS_SalesPointCode
+                      DocumentLines {
+                        ItemCode
+                        ItemDescription
+                        Quantity
+                        Price
+                      }
+                    }
                   }
                 }
               }
@@ -278,6 +299,19 @@ export default {
                         Quantity
                       }
                     }
+                    Receipt {
+                      DocDate
+                      DocTotal
+                      SalesPersonCode
+                      U_GPOS_Serial
+                      U_GPOS_SalesPointCode
+                      DocumentLines {
+                        ItemCode
+                        ItemDescription
+                        Quantity
+                        Price
+                      }
+                    }
                   }
                 }
               }
@@ -297,11 +331,11 @@ export default {
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Actualizada Exitosamente' })
 
           handleSalePrint(sale.Print, sale.Test)
+          router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
         } finally {
           Loading.hide()
-          router.push('/salesorders')
         }
       })
     }
@@ -331,6 +365,21 @@ export default {
               mutation ($Test: Boolean! $Data: TableCloseInput!) {
                 sale: table_close (Test: $Test Data: $Data) {
                   Test
+                  Print {
+                    Receipt {
+                      DocDate
+                      DocTotal
+                      SalesPersonCode
+                      U_GPOS_Serial
+                      U_GPOS_SalesPointCode
+                      DocumentLines {
+                        ItemCode
+                        ItemDescription
+                        Quantity
+                        Price
+                      }
+                    }
+                  }
                 }
               }
             `,
@@ -345,11 +394,11 @@ export default {
           })
 
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Cerrada Exitosamente' })
+          router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
         } finally {
           Loading.hide()
-          router.push('/salesorders')
         }
       })
     }
@@ -393,11 +442,11 @@ export default {
           })
 
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Reabierta Exitosamente' })
+          router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
         } finally {
           Loading.hide()
-          router.push('/salesorders')
         }
       })
     }
@@ -441,16 +490,15 @@ export default {
           })
 
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Anulada Exitosamente' })
+          router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
         } finally {
           Loading.hide()
-          router.push('/salesorders')
         }
       })
     }
     function handleCheckout (Invoice) {
-      console.log('handling checkout...')
       if (props.DocEntry) {
         handleTableCheckout(Invoice)
       } else {
@@ -531,11 +579,11 @@ export default {
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Facturada Exitosamente' })
 
           handleSalePrint(sale.Print, sale.Test)
+          router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
         } finally {
           Loading.hide()
-          router.push('/salesorders')
         }
       })
     }
@@ -626,11 +674,12 @@ export default {
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Venta Exitosa' })
 
           handleSalePrint(sale.Print, sale.Test)
+
+          resetState()
         } catch (error) {
           gql.handleError(error)
         } finally {
           Loading.hide()
-          router.push('/salesorders')
         }
       })
     }

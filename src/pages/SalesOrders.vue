@@ -71,12 +71,14 @@ import router from 'src/router'
 
 const { formatDate, startOfDate } = date
 
+const QUICKSALE = 'QUICKSALE'
 const TABLE_OPEN = 'TABLE_OPEN'
 const TABLE_CLOSED = 'TABLE_CLOSED'
 const TABLE_INVOICED = 'TABLE_INVOICED'
 const TABLE_CANCELLED = 'TABLE_CANCELLED'
 
 const typeMap = {
+  [QUICKSALE]: { label: 'Venta Rapida', color: 'info' },
   [TABLE_OPEN]: { label: 'Abierta', color: 'positive' },
   [TABLE_CLOSED]: { label: 'Cerrada', color: 'warning' },
   [TABLE_INVOICED]: { label: 'Facturada', color: 'info' },
@@ -154,7 +156,7 @@ export default {
     const type = ref([])
 
     if (store.getters['auth/isAuthorized']('administrador')) {
-      type.value.push(TABLE_OPEN, TABLE_CLOSED, TABLE_INVOICED, TABLE_CANCELLED)
+      type.value.push(QUICKSALE, TABLE_OPEN, TABLE_CLOSED, TABLE_INVOICED, TABLE_CANCELLED)
     } else {
       SalesPointCode.value = store.state.config.SalesPointCode
 
@@ -217,7 +219,7 @@ export default {
             }
           `,
           variables: {
-            Type: type.value.length ? type.value : [TABLE_OPEN, TABLE_CLOSED, TABLE_INVOICED, TABLE_CANCELLED],
+            Type: type.value.length ? type.value : [QUICKSALE, TABLE_OPEN, TABLE_CLOSED, TABLE_INVOICED, TABLE_CANCELLED],
             SalesPersonCode: SalesPersonCode.value,
             SalesPointCode: SalesPointCode.value,
             FromDate: FromDate.value.replace(/\//g, ''),
