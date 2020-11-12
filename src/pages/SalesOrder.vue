@@ -331,6 +331,7 @@ export default {
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Actualizada Exitosamente' })
 
           handleSalePrint(sale.Print, sale.Test)
+
           router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
@@ -360,7 +361,7 @@ export default {
         try {
           Loading.show({ message: 'Cerrando Mesa' })
 
-          await gql({
+          const { sale } = await gql({
             query: /* GraphQL */`
               mutation ($Test: Boolean! $Data: TableCloseInput!) {
                 sale: table_close (Test: $Test Data: $Data) {
@@ -394,6 +395,9 @@ export default {
           })
 
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Cerrada Exitosamente' })
+
+          handleSalePrint(sale.Print, sale.Test)
+
           router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
@@ -579,6 +583,7 @@ export default {
           Notify.create({ color: 'positive', icon: 'mdi-check', message: 'Mesa Facturada Exitosamente' })
 
           handleSalePrint(sale.Print, sale.Test)
+
           router.push('/salesorders')
         } catch (error) {
           gql.handleError(error)
