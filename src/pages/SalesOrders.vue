@@ -55,6 +55,7 @@
         </q-td>
       </template>
     </q-table>
+    <pre>{{$store.state}}</pre>
   </q-page>
 </template>
 
@@ -162,7 +163,7 @@ export default {
 
       if (store.getters['auth/isAuthorized']('meseros')) {
         type.value.push(TABLE_OPEN)
-        SalesPersonCode.value = store.state.config.SalesPersonCode
+        SalesPersonCode.value = store.state.auth.SalesPerson.SalesPersonCode
       }
 
       if (store.getters['auth/isAuthorized']('cajeros')) {
