@@ -55,7 +55,6 @@
         </q-td>
       </template>
     </q-table>
-    <pre>{{$store.state}}</pre>
   </q-page>
 </template>
 
